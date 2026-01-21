@@ -1,6 +1,7 @@
-import type { Node, Props } from '../modules/node/Node';
+import type { VNode } from '../contract/AbstracNode.ts';
+import type { PropsVNode } from './props.ts';
 
-export const tags: string[] = [
+export const tags = [
     'div',
     'nav',
     'span',
@@ -18,12 +19,12 @@ export const tags: string[] = [
     'h1',
     'h2',
     'h3'
-] as const;
+] as const ;
 
 export type HTMLTag = typeof tags[number];
 
 export type HTMLTagFactory = {
-    [K in HTMLTag]: (props?: Props) => Node 
+    [K in HTMLTag]: (props?: PropsVNode) => VNode 
 } & {
-    html: (tag: string, porps?: Props) => Node
+    html: (tag: string, porps?: PropsVNode) => VNode
 }
