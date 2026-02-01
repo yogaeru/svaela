@@ -1,11 +1,17 @@
 {
   "name": "svaela",
-  "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "test" : "bun run test/public/main.js",
+    "server" : "bun run test/server.js"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/jsdom": "^27.0.0",
+    "jsdom": "^27.4.0",
+    "prettier": "^3.8.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }
