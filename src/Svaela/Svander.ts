@@ -1,5 +1,6 @@
 import type { BranchRoute } from "./types";
 import { Svagation } from "./Svagation";
+import { VNode } from "../modules/node/Node";
 
 export class Svander {
   svagationRoute: any;
@@ -10,54 +11,73 @@ export class Svander {
     this.root = root;
   }
   
+  // Render element to DOM
   render() {
-    window.addEventListener("popstate",() => this._handleLocation());
+    window.addEventListener("popstate", () => this._handleLocation());
     document.addEventListener("click", (event) => this._handleClick(event));
     this._handleLocation();
   }
-   
+  
+  // Handle Path Normalization
   private normalizePath(path: string) {
-    return path.replace(/\/+$/, "") || "/"; 
+    return path.replace(/\/+$/, "") || "/";
   }
   
+  // Handle Location Change
   private _handleLocation() {
     const path = this.normalizePath(window.location.pathname);
-    console.log('PATH: ', path);
+    console.log("PATH: ", path);
     
-    
-    const content = this.svagationRoute[path] || "NOT FOUND";
-    if (!content) return;
-
-    // const el = document.getElementById(this.root);
+    // Fetch the view function for the current path
     // 
-    if (typeof content === 'string') {
+    const viewFunction = this.svagationRoute[path] || (() => "NOT FOUND");
+    if (!viewFunction) return;
+    
+    // content element returned by view function 
+    //
+    const content: HTMLElement | VNode | string = viewFunction();
+    console.log("CONTENT: ", content);
+    if (!content) return;
+  
+    // if type of view or element to display is VNode
+    // 
+    if (content instanceof VNode) {
+      console.log('Rendering VNode');
+      this.root.innerHTML = '';
+      this.root.appendChild(content.render());
+      return;
+    }
+
+    // if view or element to display is string of html element
+    // 
+    if (typeof content === "string") {
       // this.root.innerHTML = '';
       this.root.innerHTML = content;
       return;
     }
-    
+
     this.root.appendChild(content);
   }
-
+  
+  /* Handle Click Event  */
   private _handleClick(event: PointerEvent) {
     // Handle click event logic here
-    console.log("Click event handled");
+    // 
     const target = event.target as HTMLElement;
-    console.log('TARGET IS : ', target);
     if (!target) return;
+    // console.log("TARGET IS : ", target);
 
     const anchor = target.closest("a");
     if (!anchor) return;
-    console.log('ANCHOR IS : ', anchor);
+    // console.log("ANCHOR IS : ", anchor);
 
     const href = anchor.getAttribute("href");
     if (!href) return;
     event.preventDefault();
 
-
     window.history.pushState({}, "", href);
-    
+
     this._handleLocation();
-    console.log('HANDLE CLICK CLOSED')
+    // console.log("HANDLE CLICK CLOSED");
   }
 }
