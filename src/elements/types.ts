@@ -1,10 +1,10 @@
-import { VNode } from "./Node";
-import { tags } from "./tags";
+import type { VNode } from "./Node";
+import { tags, eventList } from "./constants";
 
 // 
 // VNode Types
 // 
-export type ChildVNode = VNode | TextNode | Text;
+export type ChildVNode = VNode | TextVNode | Node;
 export type PropsVNode = {
     'id'?: string,
     'className'?: string,
@@ -15,12 +15,11 @@ export type PropsVNode = {
 // 
 // TextVNode Types 
 // 
-export type TextNode = {
-  toString: () => string,
+export type TextNodeInstance = (data: string) => TextVNode;
+export type TextVNode = {
+  text: () => string,
   render: () => Text
 }
-
-export type TextNodeFunction = (data: string) => TextNode;
 
 
 // 
@@ -32,30 +31,13 @@ export type HTMLTagFactory = {
 } & {
   html: (tag: string, porps?: PropsVNode) => VNode,
   link: () => HTMLAnchorElement,
-  text: (data: string) => Text;
+  text: (data: string) => TextVNode;
 };
 
 
 //
 // Event Types
 //
-const eventList = [
-  "click",
-  "dblclick",
-  "mousedown",
-  "mouseup",
-  "mouseover",
-  "mouseout",
-  "mousemove",
-  "keydown",
-  "keyup",
-  "keypress",
-  "submit",
-  "change",
-  "input",
-  "focus",
-  "blur",
-] as const;
 type EventType = (typeof eventList)[number];
 type EventHandler = (event: Event) => void;
 type EventObject = {
