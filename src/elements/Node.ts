@@ -1,44 +1,34 @@
 import type { PropsVNode, ChildVNode } from "./types";
 
 export class VNode {
-  private _tag: string;
-  private _props: PropsVNode | undefined;
-  private _children: ChildVNode[] = [];
-  private _document: Document = window.document;
+  tag: string;
+  props: PropsVNode | undefined;
+  children: ChildVNode[];
 
   constructor(tag: string, props?: PropsVNode) {
-    this._tag = tag;
-    this._props = props;
+    this.tag = tag;
+    this.props = props;
+    this.children = [];
   }
 
-  // Getters
-  get tag(): string {
-    return this._tag;
-  }
-  get props(): PropsVNode {
-    return this._props || {};
-  }
-  get children(): ChildVNode[] {
-    return this._children;
-  }
+  //
+  // add child method
+  //
+  addChild(...children: Array<ChildVNode | ChildVNode[]>): this {
+    const child: Array<ChildVNode | Node> = children
+      .flat(1)
+      .filter((node: ChildVNode | Node): boolean => node != undefined);
 
-  // Methods
-  child(children: ChildVNode | ChildVNode[]): this {
-    if (Array.isArray(children)) {
-      if (children.length === 0) {
-        return this;
-      }
-
-      this._children.push(...children);
-      return this;
-    }
-    this._children.push(children);
+    this.children.push(...child);
     return this;
   }
 
+  //
+  // render VNode into HTMLElement
+  //
   render(): HTMLElement {
-    // creatd element html based on tag
-    const el: HTMLElement = this._document.createElement(this._tag);
+    // created element html based on tag
+    const el: HTMLElement = document.createElement(this.tag);
 
     // attach props
     if (this.props) {
@@ -61,8 +51,8 @@ export class VNode {
       }
     }
 
-    // render child elements
-    const childrenBody: Array<HTMLElement | Text> = this.renderChildren();
+    // rendered  child elements
+    const childrenBody: Node[] = this.renderChildren();
 
     // if no children, return element
     if (childrenBody.length === 0) return el;
@@ -75,7 +65,7 @@ export class VNode {
     }
 
     // if multiple children, use fragment to append
-    const fragment: DocumentFragment = this._document.createDocumentFragment();
+    const fragment: DocumentFragment = document.createDocumentFragment();
     for (const child of childrenBody) {
       fragment.appendChild(child);
     }
@@ -83,7 +73,11 @@ export class VNode {
     el.appendChild(fragment);
     return el;
   }
-
+  
+  
+  // 
+  // Format VNode into a string 
+  // 
   format(pretty: boolean = false): string {
     if (!pretty) {
       return this.toString();
@@ -92,49 +86,52 @@ export class VNode {
     const el = this.render();
     return this.pretty(el, 0);
   }
-
-  protected pretty(el: HTMLElement, indent = 0): string {
-    const space = "  ".repeat(indent);
-    const tagName = el.tagName.toLowerCase();
-
-    const textTag = el.cloneNode(true).childNodes[0]?.textContent?.trim();
-
-    const result = {
-      id: el.id ? `id="${el.id}"` : "",
-      className: el.className ? `class="${el.className}"` : "",
-      content: textTag ? `${textTag}` : "",
-    };
-
-    // no children
-    if (el.children.length === 0) {
-      return `${space}<${tagName} ${result.id} ${result.className}>${result.content}</${tagName}>`;
+  
+  // 
+  // Format VNode into a pretty string
+  //
+  private pretty(element: Node, indent = 0): string {
+    if (element instanceof Text) {
+      return `${" ".repeat(indent)}${element.textContent}`;
     }
 
-    // console.log("children: ", el.children);
+    if (element instanceof HTMLElement) {
+      const space = " ".repeat(indent);
+      const tagName = element.tagName.toLowerCase();
 
-    const children = Array.from(el.children)
-      .map((child) => this.pretty(child as HTMLElement, indent + 1))
-      .join("\n");
+      const id = element.id ? ` id="${element.id}"` : "";
+      const className = element.className
+        ? ` class="${element.className}"`
+        : "";
 
-    const finalString: string = [
-      `${space}<${tagName} ${result.id} ${result.className}>`,
-      ` ${space} ${result.content}`,
-      children,
-      `${space}</${tagName}>`,
-    ].join("\n");
+      const children = Array.from(element.childNodes)
+        .map((child: ChildNode): string => this.pretty(child, indent + 1))
+        .join("\n");
 
-    return finalString;
+      const finalString: string = [
+        `${space}<${tagName}${id}${className}>`,
+        children,
+        `${space}</${tagName}>`,
+      ].join("\n");
+
+      return finalString;
+    }
+
+    return "";
   }
 
-  protected toString(): string {
+  //
+  // to string node
+  //
+  private toString(): string {
     // render children to string with outerHTML
     const childrenString = this.renderChildren()
       .map((child) => {
         if (child instanceof Text) {
           return `   ${child.textContent}`;
+        } else if (child instanceof HTMLElement) {
+          return `   ${child.outerHTML}`;
         }
-        
-        return `   ${child.outerHTML}`;
       })
       .join("");
 
@@ -142,22 +139,28 @@ export class VNode {
     return el;
   }
 
-  protected renderChildren(): Array<HTMLElement | Text> {
+  //
+  // render children in VNode to array of HTMLElement
+  //
+  private renderChildren(): Node[] {
     // array to hold children elements
-    const body: Array<HTMLElement | Text> = [];
+    const body: Node[] = [];
 
     // if no children, return empty array
     if (this.children.length === 0) return body;
 
     // render each child and push to body array
     for (const child of this.children) {
-      if (child instanceof Text) {
+      if (typeof child === "string") {
+        body.push(document.createTextNode(child));
+        continue;
+      } else if (child instanceof Node) {
         body.push(child);
-      } else {
-        body.push(child.render());
+        continue;
       }
-    }
 
+      body.push(child.render());
+    }
     return body;
   }
 }
