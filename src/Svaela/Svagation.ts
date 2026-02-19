@@ -1,4 +1,4 @@
-import type { BranchRoute, Branch, BranchView } from './types';
+import type { BranchRoute, Branch} from './types';
 
 export class Svagation {
   private branches: Branch = {};

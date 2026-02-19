@@ -1,6 +1,5 @@
-import type { BranchRoute } from "./types";
 import { Svagation } from "./Svagation";
-import { VNode } from "../modules/node/Node";
+import { VNode } from "../elements/Node";
 
 export class Svander {
   svagationRoute: any;

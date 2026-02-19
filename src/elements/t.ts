@@ -1,6 +1,13 @@
+import { tags } from "./constants";
 import { VNode } from "./Node";
-import { tags } from "./tags";
-import type { ChildVNode, PropsVNode, HTMLTagFactory } from "./types";
+import { createTextVNode } from "./TextVNode";
+
+import type {
+  ChildVNode,
+  PropsVNode,
+  HTMLTagFactory,
+  TextVNode,
+} from "./types";
 
 /**
  * Genrate HTML Tags Factory
@@ -8,12 +15,19 @@ import type { ChildVNode, PropsVNode, HTMLTagFactory } from "./types";
 export const t: HTMLTagFactory = {} as HTMLTagFactory;
 
 for (const tag of tags) {
-  t[tag] = (props?: PropsVNode, ...children: ChildVNode[]): VNode => {
-    const child: ChildVNode[]= children
-      .flat(Infinity)
-      .filter((node): boolean => node !== undefined);
+  t[tag] = (
+    props?: PropsVNode,
+    ...children: Array<string | ChildVNode | ChildVNode[]>
+  ): VNode => {
+    const child: ChildVNode[] = children
+      .flat(1)
+      .filter((node: ChildVNode | string): boolean => node !== undefined)
+      .map((node: ChildVNode | string): ChildVNode => {
+        if (typeof node === "string") return createTextVNode(node);
+        return node;
+      });
 
-    return new VNode(tag, props).child(child);
+    return new VNode(tag, props).addChild(child);
   };
 }
 
@@ -29,7 +43,9 @@ t.link = (): HTMLAnchorElement => {
   return anchor;
 };
 
-t.text = (data: string): Text => {
-  const text: Text = document.createTextNode(data);
-  return text;
-}
+t.text = (data: string): TextVNode => {
+  return createTextVNode(data);
+};
+
+
+

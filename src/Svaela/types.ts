@@ -1,4 +1,4 @@
-import type { VNode } from "../modules/node/Node";
+import type { VNode } from "../elements/Node";
 
 export type ViewElement = () => HTMLElement | VNode | string;
 

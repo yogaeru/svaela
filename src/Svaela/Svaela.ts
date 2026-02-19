@@ -1,6 +1,6 @@
 import { Svander } from "./Svander";
 import type { Svagation } from "./Svagation";
-import { VNode } from "../modules/node/Node";
+import { VNode } from "../elements/Node"
 
 export class Svaela {
   element: Svagation | VNode;
