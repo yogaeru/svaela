@@ -1,6 +1,9 @@
 # dependencies (bun install)
 node_modules
 
+# vscode settings
+.vscode
+
 # testing 
 test
 
