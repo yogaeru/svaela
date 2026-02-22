@@ -1,6 +1,7 @@
 import type { PropsVNode, ChildVNode } from "./types";
 
 export class VNode {
+  el: any;
   tag: string;
   props: PropsVNode | undefined;
   children: ChildVNode[];
@@ -29,6 +30,7 @@ export class VNode {
   render(): HTMLElement {
     // created element html based on tag
     const el: HTMLElement = document.createElement(this.tag);
+    this.el = el;
 
     // attach props
     if (this.props) {
@@ -73,11 +75,49 @@ export class VNode {
     el.appendChild(fragment);
     return el;
   }
-  
-  
-  // 
-  // Format VNode into a string 
-  // 
+
+  //
+  // Patch Node
+  //
+  patch(newVNode: VNode) {
+    if (!this.el) return;
+
+    // jika tag beda → replace total
+    if (this.tag !== newVNode.tag) {
+      const newEl = newVNode.render();
+      this.el.replaceWith(newEl);
+      return;
+    }
+
+    const el = this.el;
+    newVNode.el = el;
+
+    // Update text content jika ada
+    if (newVNode.props?.content !== this.props?.content) {
+      el.textContent = newVNode.props?.content || "";
+    }
+
+    // simple children replace (belum diffing pintar)
+    el.innerHTML = "";
+
+    for (const child of newVNode.children) {
+      if (typeof child === "string") {
+        el.appendChild(document.createTextNode(child));
+      } else if (child instanceof Node) {
+        el.appendChild(child);
+      } else {
+        el.appendChild(child.render());
+      }
+    }
+
+    // update reference
+    this.children = newVNode.children;
+    this.props = newVNode.props;
+  }
+
+  //
+  // Format VNode into a string
+  //
   format(pretty: boolean = false): string {
     if (!pretty) {
       return this.toString();
@@ -86,8 +126,8 @@ export class VNode {
     const el = this.render();
     return this.pretty(el, 0);
   }
-  
-  // 
+
+  //
   // Format VNode into a pretty string
   //
   private pretty(element: Node, indent = 0): string {
