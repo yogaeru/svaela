@@ -1,6 +1,6 @@
 import { t } from "../../src/index";
-import { reactive } from "../../src/elements/reactivity";
-import { createComponent } from "../../src/elements/createEl";
+import { reactive } from "../../src/reactive/reactivity";
+import { createComponent } from "../../src/reactive/createEl";
 
 
 // counter component
