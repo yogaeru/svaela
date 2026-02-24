@@ -1,10 +1,11 @@
 import type { PropsVNode, ChildVNode } from "./types";
 
 export class VNode {
-  el: any;
+  el: HTMLElement | null = null;
   tag: string;
   props: PropsVNode | undefined;
   children: ChildVNode[];
+  eventList: Array<object> = []
 
   constructor(tag: string, props?: PropsVNode) {
     this.tag = tag;
@@ -16,6 +17,7 @@ export class VNode {
   // add child method
   //
   addChild(...children: Array<ChildVNode | ChildVNode[]>): this {
+    // console.log("Adding child:", children);
     const child: Array<ChildVNode | Node> = children
       .flat(1)
       .filter((node: ChildVNode | Node): boolean => node != undefined);
@@ -114,7 +116,16 @@ export class VNode {
     this.children = newVNode.children;
     this.props = newVNode.props;
   }
-
+  
+  // 
+  // Add event listener to element
+  // 
+  on(eventName: string, handler: Function): this {
+    this.eventList.push({eventName, handler});
+    return this;
+  }
+  
+  
   //
   // Format VNode into a string
   //
@@ -186,6 +197,8 @@ export class VNode {
     // array to hold children elements
     const body: Node[] = [];
 
+    // console.log("ARRAY OF CHILDREN", this.children)
+
     // if no children, return empty array
     if (this.children.length === 0) return body;
 
@@ -198,7 +211,7 @@ export class VNode {
         body.push(child);
         continue;
       }
-
+      // console.log("CHILDREN", child);
       body.push(child.render());
     }
     return body;
