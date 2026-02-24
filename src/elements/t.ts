@@ -1,12 +1,12 @@
 import { tags } from "./constants";
 import { VNode } from "./Node";
-import { createTextVNode } from "./TextVNode";
+import { effect } from "../../src";
 
 import type {
+  ChildArgument,
   ChildVNode,
   PropsVNode,
   HTMLTagFactory,
-  TextVNode,
 } from "./types";
 
 /**
@@ -15,17 +15,21 @@ import type {
 export const t: HTMLTagFactory = {} as HTMLTagFactory;
 
 for (const tag of tags) {
-  t[tag] = (
-    props?: PropsVNode,
-    ...children: Array<string | ChildVNode | ChildVNode[]>
-  ): VNode => {
-    const child: ChildVNode[] = children
+  t[tag] = (...data: ChildArgument): VNode => {
+    const props = data[0] as PropsVNode;
+    // const children = data;
+    const child: ChildVNode[] = data
       .flat(1)
-      .filter((node: ChildVNode | string): boolean => node !== undefined)
-      .map((node: ChildVNode | string): ChildVNode => {
-        if (typeof node === "string") return createTextVNode(node);
-        return node;
-      });
+      .map(
+        (node: string | ChildVNode | PropsVNode): PropsVNode | ChildVNode => {
+          if (typeof node === "string") return t.text(node);
+          return node;
+        },
+      )
+      .filter(
+        (node: PropsVNode | ChildVNode): node is VNode | Node =>
+          node !== undefined && (node instanceof VNode || node instanceof Node),
+      );
 
     return new VNode(tag, props).addChild(child);
   };
@@ -43,9 +47,26 @@ t.link = (): HTMLAnchorElement => {
   return anchor;
 };
 
-t.text = (data: string): TextVNode => {
-  return createTextVNode(data);
+t.text = (data: string): Text => {
+  return document.createTextNode(data);
 };
 
+t.bind = (value: any) => {
+  let currentNode: any;
 
+  effect(() => {
+    const stringData: string = String(value());
+    const text: Text = document.createTextNode(stringData);
+    // console.log("Binding value:", value);
+    // console.log("String:", stringData);
+    // console.log("Text:", currentNode);
 
+    if (!currentNode) {
+      currentNode = text;
+    } else {
+      currentNode.textContent = stringData;
+    }
+  });
+
+  return currentNode;
+};
