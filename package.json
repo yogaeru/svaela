@@ -1,0 +1,19 @@
+{
+  "name": "colyx",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "typecheck": "bun check"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7",
+    "sharp": "^0.35.5"
+  },
+  "dependencies": {
+    "colorthief": "^3.5.0",
+    "@material/material-color-utilities": "^0.4.0"
+  }
+}
