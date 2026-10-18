@@ -1,10 +1,17 @@
 import { getColor, getPalette, getSwatches } from "colorthief";
 
-import { convertColorFromArgb, rgbToArgb } from "./convert";
-import { SWATCH_NAMES } from "./data";
+import { convertColorFromArgb, rgbToArgb } from "./convert.js";
+export const SWATCH_NAMES = [
+  "Vibrant",
+  "DarkVibrant",
+  "LightVibrant",
+  "Muted",
+  "DarkMuted",
+  "LightMuted",
+] as const;
 
 import type { Color, ImageSource, SwatchMap, SwatchRole } from "colorthief";
-import type { ColorFormat, ColorResult, SwatchColorMap } from "./types";
+import type { ColorFormat, ColorResult, SwatchColorMap } from "./types.js";
 
 /** Convert an extracted sRGB color. Color Thief returns opaque colors. */
 export function getColorFormat<K extends ColorFormat>(
@@ -49,8 +56,8 @@ export async function getPaletteColorFromImage<K extends ColorFormat>(
   format: K,
   count = 3,
 ): Promise<ColorResult<K>[] | undefined> {
-  if (!Number.isInteger(count) || count < 2 || count > 10) {
-    throw new RangeError("Palette count must be an integer between 2 and 10");
+  if (!Number.isInteger(count) || count < 2 || count > 20) {
+    throw new RangeError("Palette count must be an integer between 2 and 20");
   }
   const palette = await getPalette(source, { colorCount: count });
   return palette?.map((color) => getColorFormat(color, format));

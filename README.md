@@ -1,79 +1,39 @@
-# Colors
+# Svaela
 
-Typed color conversions, image color extraction, and Material 3 light/dark schemes.
-Import the public API from `@/lib/colors` within this app. The module has no React
-or app-specific imports; it uses the existing Color Thief and Material Color
-Utilities dependencies.
+Svaela is a typed TypeScript library for color conversion, Color Thief image
+extraction, Material 3 color schemes, and small text templates.
 
-## Modules
+## Install
 
-- `index.ts` — public functions, constants, and types.
-- `channels.ts` / `types.ts` — channel units and format-dependent result types.
-- `convert.ts` — conversion, validation, and CSS serialization.
-- `extract.ts` — asynchronous Color Thief adapter.
-- `material.ts` — Material scheme generation.
-- `data.ts` — swatch names and Material role metadata.
-- `template.ts` — optional plain-text template rendering.
-- `__tests__/` — conversion, extraction, scheme, and type-contract tests.
+```sh
+bun add svaela
+# or
+npm install svaela
+```
 
+`sharp` is a peer dependency for Node image decoding. In browsers, pass a
+Color Thief-compatible image or canvas source.
 
-## Formats and units
-
-| Format | Value | Units |
-| --- | --- | --- |
-| `hex` | `string` | `#rrggbb`, or `#rrggbbaa` when nonopaque |
-| `argb` | `number` | Unsigned packed `0xAARRGGBB` |
-| `rgb` | `{ r, g, b }` | Channels 0–255 |
-| `rgba` | `{ r, g, b, a }` | RGB plus alpha 0–1 |
-| `hsl` | `{ h, s, l }` | Hue in degrees; saturation/lightness 0–100 |
-| `hsla` | `{ h, s, l, a }` | HSL plus alpha 0–1 |
-| `oklch` | `{ l, c, h, a }` | Lightness 0–1, raw nonnegative chroma, degree hue, alpha 0–1 |
-
-RGB and HSL deliberately exclude alpha. Use RGBA/HSLA when transparency matters.
-OKLCH includes alpha. Achromatic hue is zero. RGB/HSL/OKLCH results are channel
-objects, not CSS strings: use `formatColor` for CSS output.
-
-## Convert colors
+## Color conversion
 
 ```ts
 import {
-  hexToArgb,
   convertColorFromArgb,
   convertColorToArgb,
-  argbToRgba,
-  rgbToArgb,
-  hslToArgb,
-  oklchToArgb,
   formatColor,
-} from "@/lib/colors";
+  hexToArgb,
+} from "svaela";
 
 const seed = hexToArgb("#6750a4");
-const oklch = convertColorFromArgb(seed, "oklch"); // OKLCH, inferred
-const css = formatColor(oklch, "oklch"); // oklch(... / 1)
-const transparent = argbToRgba(hexToArgb("#f008"));
-const integer = convertColorToArgb(transparent, "rgba"); // unsigned 0xAARRGGBB
-
-rgbToArgb(transparent); // preserves alpha
-hslToArgb({ h: 270, s: 50, l: 40 }); // opaque by default
-oklchToArgb(oklch);
+const oklch = convertColorFromArgb(seed, "oklch");
+const css = formatColor(oklch, "oklch");
+const argb = convertColorToArgb("#6750a4", "hex");
 ```
 
-`convertColorToArgb(color, format)` accepts any supported format and returns an
-unsigned ARGB integer. It preserves supplied alpha, defaults RGB/HSL to opaque,
-and validates/normalizes existing ARGB integers.
-
-Dedicated `argbToHex`, `argbToRgb`, `argbToRgba`, `argbToHsl`, `argbToHsla`, and
-`argbToOklch` converters are also exported. `hslToRgb` and `oklchToRgb` produce
-fractional RGB channels without alpha; their `*ToArgb` counterparts retain alpha.
-Use packed ARGB as the interchange format when chaining conversions. Packing
-rounds channels to 8-bit values; inverse OKLCH clips out-of-sRGB-gamut channels
-rather than performing perceptual gamut mapping.
-
-`hexToArgb` accepts exactly `#rgb`, `#rgba`, `#rrggbb`, and `#rrggbbaa`,
-case-insensitively. Hex alpha is last; packed ARGB alpha is first. Signed 32-bit
-ARGB inputs are accepted and normalized. Invalid/nonfinite channels throw;
-finite hue wraps to 0–360 degrees. Other channels must be within their documented
-ranges. `formatColor(value, "argb")` emits CSS `rgba()`, not a decimal integer.
+Supported formats are `hex`, `argb`, `rgb`, `rgba`, `hsl`, `hsla`, and `oklch`.
+The format argument narrows the result without a large generic type hierarchy.
+Packed values use unsigned `0xAARRGGBB`; signed 32-bit values are accepted and
+normalized. Invalid ranges throw `RangeError` or `TypeError`.
 
 ## Extract image colors
 
@@ -82,137 +42,94 @@ import {
   getDominantColorFromImage,
   getPaletteColorFromImage,
   getSwatchColorFromImage,
-} from "@/lib/colors";
+} from "svaela";
 
-// image is a Color Thief ImageSource, e.g. HTMLImageElement or HTMLCanvasElement.
-const dominant = await getDominantColorFromImage(image, "rgba");
-const palette = await getPaletteColorFromImage(image, "oklch", 5);
-const swatches = await getSwatchColorFromImage(image, "hex");
+const dominant = await getDominantColorFromImage(image, "hex");
+const palette = await getPaletteColorFromImage(image, "rgb", 5);
+const swatches = await getSwatchColorFromImage(image, "rgba");
 ```
 
-Palette size must be an integer from 2 to 20 (default 3). Dominant/palette return
-`undefined` when no colors can be extracted. Swatch results include every
-`SWATCH_NAMES` key, with `undefined` for unavailable roles. Extracted colors are
-opaque: Color Thief does not preserve per-pixel alpha in palette colors.
-Image loading/decoding errors propagate. Browser images must satisfy canvas/CORS
-requirements; Node image loading may require Color Thief's optional decoder.
+Palette sizes are integers from 2 to 20. Dominant and palette extraction return
+`undefined` when no color is available. Swatch extraction always returns the
+six keys in `SWATCH_NAMES`, with `undefined` for unavailable swatches.
 
-## Generate Material schemes
+## Material 3 schemes
 
 ```ts
-import { hexToArgb, schemeFromSourceColor, schemeFromImageToColor } from "@/lib/colors";
+import { hexToArgb, schemeFromSourceColor } from "svaela";
 
-const theme = schemeFromSourceColor(hexToArgb("#6750a4"), {
+const scheme = schemeFromSourceColor(hexToArgb("#6750a4"), {
+  format: "hex",
   scheme: "tonalSpot",
-  format: "oklch",
   contrastLevel: 0,
 });
-// theme.sourceColor: OKLCH
-// theme.color.light.primary: OKLCH
-// theme.color.dark.primary: OKLCH
 
-const themes = await schemeFromImageToColor(image, {
-  colorType: "palette",
-  paletteSize: 5,
-  scheme: "vibrant",
-  format: "rgba",
-  contrastLevel: 0.5,
-}); // MaterialSchemeResult<"rgba">[] (never undefined)
-// themes[0]: { id: "1", name: "Palette-1", sourceColor: RGBA,
-//              color: { dark: SchemeColors<"rgba">, light: SchemeColors<"rgba"> } }
+scheme.sourceColor;             // "#6750a4"
+scheme.colors.primary.light;    // role value for light mode
+scheme.colors.primary.dark;     // role value for dark mode
 ```
 
-All formats work for both the source color and each generated role. Defaults are
-`format: "hex"`, `scheme: "tonalSpot"`, and `contrastLevel: 0`; contrast must be
-within -1..1. Scheme names are exported via `SCHEMES` and `SchemeName`.
-Material scheme roles are opaque even when the seed has alpha.
+The result is intentionally role-oriented: every role contains its `light` and
+`dark` value. This makes it straightforward to serialize or template themes.
+Use `schemeFromDominantColor`, `schemeFromPaletteColors`,
+`schemeFromSwatchColors`, or `schemeFromImageToColor` for metadata-bearing
+arrays. Their defaults are `hex`, `tonalSpot`, and contrast `0`.
 
-- `schemeFromSourceColor`: one `MaterialColorResponse<K>`:
-  `{ sourceColor, color: { dark, light } }`, without metadata or an array wrapper.
-- `schemeFromDominantColor`: one-element `MaterialSchemeResult<K>[]`, with
-  `id: "dominant"` and `name: "Dominant"`.
-- `schemeFromPaletteColors`: `MaterialSchemeResult<K>[]` in input order, with
-  one-based string IDs (`"1"`, `"2"`, …) and names (`"Palette-1"`, `"Palette-2"`, …).
-  Duplicate seeds and zero-valued seeds are retained. Empty palettes return `[]`.
-- `schemeFromSwatchColors`: `MaterialSchemeResult<K>[]` in `SWATCH_NAMES` order,
-  with the swatch role as both `id` and `name`. Only `undefined` swatches are
-  skipped; packed ARGB `0` is valid. Each available seed is generated once.
-- `schemeFromImageToColor`: always `Promise<MaterialSchemeResult<K>[]>` for
-  `"dominant"` (default), `"palette"`, and `"swatch"`. Empty images return `[]`
-  in every mode. It forwards format, scheme, and contrast options.
-- `schemeFromImage`: legacy `Promise<SchemeResponse<K> | undefined>` containing
-  only `{ dark, light }` from the dominant color. Unlike `schemeFromImageToColor`,
-  it still returns `undefined` when no color is available.
+`MATERIAL_ROLES`, `SWATCH_NAMES`, `SCHEMES`, and all related types are exported.
 
-The dominant/palette/swatch seed helpers accept an options object or the legacy
-`SchemeName` string as their second argument (hex output for the string form).
-Image helpers and `schemeFromSourceColor` accept options objects.
+## Templates
 
-`SchemeOptions` and `ImageSchemeOptions` are non-generic:
+Templates support paths, parent paths, sections, and explicit loops:
 
 ```ts
-interface SchemeOptions {
-  format?: ColorFormat;
-  scheme?: SchemeName;
-  contrastLevel?: number;
-}
-interface ImageSchemeOptions extends SchemeOptions {
-  colorType?: ColorExtractionType;
-  paletteSize?: number;
-}
+import { renderTemplate, schemeFromSourceColor } from "svaela";
+
+const theme = schemeFromSourceColor(0xff6750a4);
+const css = renderTemplate(
+  ":root {\n{{#each colors as role}}  --{{role}}: {{colors.(role).(mode)}};\n{{/each}}}",
+  { colors: theme.colors, mode: "dark" },
+);
 ```
 
-Overloads infer hex when the format is omitted, and precise values when a format
-is explicitly supplied (e.g. `{ format: "rgba" }`). `SchemeFormatOptions<K>` is a
-reusable options type with a **required** `format: K`; specifying a non-hex generic
-without supplying its format is not supported. Broad `SchemeOptions` /
-`ImageSchemeOptions` variables are also accepted, returning values typed with
-`ColorFormat` rather than incorrectly promising hex:
+`{{#each list as item}}...{{/each}}` binds each item to `item`, while
+`{{#list}}...{{/list}}` is a shorthand for arrays. Parent contexts can be
+accessed with `../`. Rendering is plain text and does not HTML-escape values.
 
-```ts
-import { schemeFromImageToColor, MaterialYouColors } from "@/lib/colors";
-import type { ColorFormat, ImageSource, ImageSchemeOptions, MaterialSchemeResult } from "@/lib/colors";
-
-async function loadSchemes(image: ImageSource, options: ImageSchemeOptions) {
-  const schemes = await schemeFromImageToColor(image, options);
-  const props: { schemes: readonly MaterialSchemeResult<ColorFormat>[]; format: ColorFormat } = {
-    schemes,
-    format: options.format ?? "hex",
-  };
-  return props;
-}
-// MaterialYouColors is the grouped role-description metadata, also exported at root.
-```
-
-`ImageSchemeResultMap<K>` now maps **all three** extraction modes to
-`MaterialSchemeResult<K>[]`. `SwatchSchemeMap<K>` is retained only as a legacy
-keyed-map type; no current scheme helper returns it. The entry point exports
-`schemeFromDominantColor`, `MaterialSchemeResult`, `SchemeOptions`,
-`ImageSchemeOptions`, `SchemeFormatOptions`, and `MaterialYouColors`, alongside
-existing scheme APIs and types.
-
-## Compatibility notes
-
-- `argbToRgb` / `argbToHsl` no longer include `a`; use their RGBA/HSLA counterparts.
-- Nonopaque `argbToHex` now preserves alpha with eight hex digits.
-- Scheme role values now match the requested format instead of mixing CSS strings
-  with objects or silently falling back to hex. Use `formatColor` to serialize.
-- Dominant/palette/swatch schemes are now uniform arrays of flat
-  `{ id, name, sourceColor, color: { dark, light } }` entries. Consume entries by
-  iteration or `id`, not keyed swatch-map access or `entry.color.color`.
-- Use `MaterialRole` (singular); the old `MaterialRoles` alias has been removed.
-- `ConvertColorFunctions` remains a deprecated alias in `data.ts` for
-  `ARGB_CONVERTERS`; use the latter from the public entry point.
-- `renderTemplate` has no import-time demo/logging. It renders plain text and does
-  not HTML-escape values; never inject untrusted output as HTML.
-
-## Tests
-
-Run `bun run test:colors`. Tests use deterministic color round trips and isolated
-pixel-loader fixtures, with no network, DOM, or additional dependencies. The
-compile-time contracts require a separate strict TypeScript check, since Bun
-transpiles tests without type-checking:
+## Development
 
 ```sh
-bunx tsc --ignoreConfig --noEmit --strict --skipLibCheck --target es2023 --module esnext --moduleResolution bundler --verbatimModuleSyntax --noUnusedLocals --noUnusedParameters --types bun src/lib/colors/index.ts src/lib/colors/__tests__/*.ts
+bun install
+bun run typecheck
+bun run build
+bun test
 ```
+
+`bun run build` invokes TypeScript with the project `tsconfig.json` and writes
+compiled JavaScript, source maps, and declaration files to `dist/`. The
+published
+package entry points resolve to `dist/index.js` and `dist/index.d.ts`.
+
+Run the examples individually:
+
+```sh
+bun run example:convert
+bun run example:scheme
+bun run example:template
+bun run extract
+```
+
+The package entry point is [`index.ts`](./index.ts). Complete runnable
+examples are in [`examples/`](./examples/):
+
+- [`convertColor.ts`](./examples/convertColor.ts) converts a color and formats
+  it as CSS in every supported format, demonstrates dedicated converters,
+  object-to-ARGB conversion, and the dispatch table.
+- [`materialScheme.ts`](./examples/materialScheme.ts) creates a Material 3
+  role-oriented scheme and demonstrates every scheme style, output format,
+  contrast options, dominant/palette/swatch sources, and image options.
+- [`renderTheme.ts`](./examples/renderTheme.ts) renders scheme roles into CSS
+  custom properties and demonstrates dynamic paths, object sections, and
+  explicit item aliases.
+- [`extractImage.ts`](./examples/extractImage.ts) extracts dominant, palette,
+  swatch, multiple output formats, and image-based schemes for every
+  extraction mode.

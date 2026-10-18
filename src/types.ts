@@ -1,32 +1,25 @@
-import type { MATERIAL_ROLES, SWATCH_NAMES } from "./data";
-
 export type { ImageSource } from "colorthief";
 
-/** sRGB channels in 0..255 (fractional values are allowed). */
 export interface RGB {
   r: number;
   g: number;
   b: number;
 }
 
-/** sRGB channels in 0..255, with alpha in 0..1. */
 export interface RGBA extends RGB {
   a: number;
 }
 
-/** Hue in degrees, saturation and lightness in 0..100 percent. */
 export interface HSL {
   h: number;
   s: number;
   l: number;
 }
 
-/** HSL degrees/percent, with alpha in 0..1. */
 export interface HSLA extends HSL {
   a: number;
 }
 
-/** OKLCH lightness in 0..1, raw nonnegative chroma, hue in degrees, alpha in 0..1. */
 export interface OKLCH {
   l: number;
   c: number;
@@ -45,44 +38,100 @@ export interface ColorFormatMap {
 }
 
 export type ColorFormat = keyof ColorFormatMap;
-export type ColorResult<K extends ColorFormat> = ColorFormatMap[K];
-export type SwatchName = (typeof SWATCH_NAMES)[number];
-export type SwatchColorMap<K extends ColorFormat> = Record<
-  SwatchName,
-  ColorResult<K> | undefined
->;
-export type MaterialRole = (typeof MATERIAL_ROLES)[number];
-export type SchemeColors<K extends ColorFormat> = Record<
+export type ColorResult<F extends ColorFormat> = ColorFormatMap[F];
+export type ColorValue = ColorFormatMap[ColorFormat];
+
+export type SwatchName =
+  | "Vibrant"
+  | "DarkVibrant"
+  | "LightVibrant"
+  | "Muted"
+  | "DarkMuted"
+  | "LightMuted";
+
+export type MaterialRole =
+  | "background"
+  | "on_background"
+  | "surface"
+  | "surface_dim"
+  | "surface_bright"
+  | "surface_container_lowest"
+  | "surface_container_low"
+  | "surface_container"
+  | "surface_container_high"
+  | "surface_container_highest"
+  | "on_surface"
+  | "on_surface_variant"
+  | "outline"
+  | "outline_variant"
+  | "inverse_surface"
+  | "inverse_on_surface"
+  | "primary"
+  | "primary_dim"
+  | "on_primary"
+  | "primary_container"
+  | "on_primary_container"
+  | "primary_fixed"
+  | "primary_fixed_dim"
+  | "on_primary_fixed"
+  | "on_primary_fixed_variant"
+  | "inverse_primary"
+  | "secondary"
+  | "secondary_dim"
+  | "on_secondary"
+  | "secondary_container"
+  | "on_secondary_container"
+  | "secondary_fixed"
+  | "secondary_fixed_dim"
+  | "on_secondary_fixed"
+  | "on_secondary_fixed_variant"
+  | "tertiary"
+  | "tertiary_dim"
+  | "on_tertiary"
+  | "tertiary_container"
+  | "on_tertiary_container"
+  | "tertiary_fixed"
+  | "tertiary_fixed_dim"
+  | "on_tertiary_fixed"
+  | "on_tertiary_fixed_variant"
+  | "error"
+  | "error_dim"
+  | "on_error"
+  | "error_container"
+  | "on_error_container";
+
+export type ThemeMode = "light" | "dark";
+export type SchemeColors<F extends ColorFormat> = Record<
   MaterialRole,
-  ColorResult<K>
+  Record<ThemeMode, ColorResult<F>>
 >;
-export interface SchemeResponse<K extends ColorFormat = "hex"> {
-  dark: SchemeColors<K>;
-  light: SchemeColors<K>;
-}
-export interface MaterialColorResponse<K extends ColorFormat = "hex"> {
-  sourceColor: ColorResult<K>;
-  color: SchemeResponse<K>;
+
+export interface MaterialColorResponse<F extends ColorFormat = "hex"> {
+  sourceColor: ColorResult<F>;
+  colors: SchemeColors<F>;
 }
 
-export interface MaterialSchemeResult<
-  K extends ColorFormat = "hex",
-> extends MaterialColorResponse<K> {
+export interface MaterialSchemeResult<F extends ColorFormat = "hex">
+  extends MaterialColorResponse<F> {
   id: string;
   name: string;
 }
 
+export type SchemeResponse<F extends ColorFormat = "hex"> = SchemeColors<F>;
 export type MaterialColorResponseMap = {
-  [K in ColorFormat]: MaterialColorResponse<K>;
+  [F in ColorFormat]: MaterialColorResponse<F>;
 };
-/** Legacy keyed shape; current scheme helpers return MaterialSchemeResult arrays. */
-export type SwatchSchemeMap<K extends ColorFormat = "hex"> = Partial<
-  Record<SwatchName, MaterialColorResponse<K>>
+export type SwatchSchemeMap<F extends ColorFormat = "hex"> = Partial<
+  Record<SwatchName, MaterialColorResponse<F>>
 >;
-export type ColorExtractionType = "dominant" | "palette" | "swatch";
 
-export interface ImageSchemeResultMap<K extends ColorFormat = "hex"> {
-  dominant: MaterialSchemeResult<K>[];
-  palette: MaterialSchemeResult<K>[];
-  swatch: MaterialSchemeResult<K>[];
-}
+export type SwatchColorMap<F extends ColorFormat> = Record<
+  SwatchName,
+  ColorResult<F> | undefined
+>;
+
+export type ColorExtractionType = "dominant" | "palette" | "swatch";
+export type ImageSchemeResultMap<F extends ColorFormat = "hex"> = Record<
+  ColorExtractionType,
+  MaterialSchemeResult<F>[]
+>;

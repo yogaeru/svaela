@@ -2,7 +2,7 @@ import { expect } from "bun:test";
 import { configure, createColor, getSwatches } from "colorthief";
 import type { ExtractionOptions, ImageSource, SwatchMap } from "colorthief";
 import { convertColorFromArgb, rgbToArgb } from "../src/convert";
-import { SWATCH_NAMES } from "../src/data";
+import { SWATCH_NAMES } from "../src/extract";
 import {
   getColorFormat,
   getDominantColorFromImage,
@@ -16,7 +16,7 @@ import {
   schemeFromPaletteColors,
   schemeFromSourceColor,
   schemeFromSwatchColors,
-} from "../src/material";
+} from "../src/attachment/color";
 import type { ColorFormat, SwatchColorMap } from "../src/types";
 
 // Run only in a child process: configure() is global and has no reset API.
@@ -210,9 +210,6 @@ const cases: Record<string, () => Promise<void>> = {
         contrastLevel: 0.75,
       };
       const expected = schemeFromSourceColor(seed, options);
-      expect(await schemeFromImageToColor("solid", options)).toEqual(
-        expected.color,
-      );
       const entries = [{ id: "dominant", name: "Dominant", ...expected }];
       expect(await schemeFromImageToColor("solid", options)).toEqual(entries);
       expect(
@@ -224,9 +221,6 @@ const cases: Record<string, () => Promise<void>> = {
     }
     expect(await schemeFromImageToColor("solid")).toEqual(
       schemeFromDominantColor(seed),
-    );
-    expect(await schemeFromImageToColor("solid")).toEqual(
-      schemeFromSourceColor(seed).color,
     );
     expect(await schemeFromImageToColor("black", { format: "argb" })).toEqual(
       schemeFromDominantColor(0xff000000, { format: "argb" }),
@@ -250,7 +244,7 @@ const cases: Record<string, () => Promise<void>> = {
       for (const [index, entry] of result.entries()) {
         expect(Array.isArray(entry)).toBe(false);
         expect(Object.keys(entry).sort()).toEqual([
-          "color",
+          "colors",
           "id",
           "name",
           "sourceColor",

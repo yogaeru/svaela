@@ -1,7 +1,7 @@
-import type { HSL, HSLA, OKLCH, RGB, RGBA } from "./types";
-import type { ColorFormatMap } from "./types";
+import type { HSL, HSLA, OKLCH, RGB, RGBA } from "./types.js";
+import type { ColorFormatMap, ColorFormat } from "./types.js";
 
-export type { HSL, HSLA, OKLCH, RGB, RGBA } from "./types";
+export type { HSL, HSLA, OKLCH, RGB, RGBA } from "./types.js";
 
 function finite(value: number, channel: string): number {
   if (!Number.isFinite(value)) {
@@ -263,11 +263,26 @@ export const ARGB_CONVERTERS: {
   oklch: argbToOklch,
 };
 
-export function convertColorFromArgb<K extends keyof typeof ARGB_CONVERTERS>(
+export function convertColorFromArgb<K extends ColorFormat>(
   argb: number,
   format: K,
 ): ColorFormatMap[K] {
-  return ARGB_CONVERTERS[format](argb);
+  switch (format) {
+    case "hex":
+      return argbToHex(argb) as ColorFormatMap[K];
+    case "argb":
+      return normalizeArgb(argb) as ColorFormatMap[K];
+    case "rgb":
+      return argbToRgb(argb) as ColorFormatMap[K];
+    case "rgba":
+      return argbToRgba(argb) as ColorFormatMap[K];
+    case "hsl":
+      return argbToHsl(argb) as ColorFormatMap[K];
+    case "hsla":
+      return argbToHsla(argb) as ColorFormatMap[K];
+    case "oklch":
+      return argbToOklch(argb) as ColorFormatMap[K];
+  }
 }
 
 const TO_ARGB_CONVERTERS: {
@@ -300,25 +315,25 @@ const CSS_FORMATTERS: {
   argb: (color) => CSS_FORMATTERS.rgba(argbToRgba(color)),
   rgb: (color) => {
     validateRgb(color);
-    return `rgb(${color.r}, ${color.g}, ${color.b})`;
+    return `rgb(${color.r} ${color.g} ${color.b})`;
   },
   rgba: (color) => {
     validateRgb(color);
     range(color.a, 0, 1, "a");
-    return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    return `rgba(${color.r} ${color.g} ${color.b} / ${color.a})`;
   },
   hsl: (color) => {
     validateHsl(color);
-    return `hsl(${hue(color.h)}, ${color.s}, ${color.l})`;
+    return `hsl(${hue(color.h)} ${color.s}% ${color.l}%)`;
   },
   hsla: (color) => {
     validateHsl(color);
     range(color.a, 0, 1, "a");
-    return `hsla(${hue(color.h)}, ${color.s}, ${color.l}, ${color.a})`;
+    return `hsla(${hue(color.h)} ${color.s}% ${color.l}% / ${color.a})`;
   },
   oklch: (color) => {
     validateOklch(color);
-    return `oklch(${color.l}, ${color.c}, ${hue(color.h)}, ${color.a})`;
+    return `oklch(${color.l} ${color.c} ${hue(color.h)} / ${color.a})`;
   },
 };
 

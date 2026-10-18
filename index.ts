@@ -16,14 +16,14 @@ export {
   convertColorToArgb,
   formatColor,
   ARGB_CONVERTERS,
-} from "./src/convert";
+} from "@/convert";
 export {
   getColorFormat,
   getSwatchTypeColor,
   getDominantColorFromImage,
   getPaletteColorFromImage,
   getSwatchColorFromImage,
-} from "./src/extract";
+} from "@/extract";
 export {
   SCHEMES,
   schemeFromSourceColor,
@@ -31,16 +31,17 @@ export {
   schemeFromSwatchColors,
   schemeFromPaletteColors,
   schemeFromImageToColor,
-} from "./src/material";
+} from "@/attachment/color.js";
 export type {
   SchemeName,
   SchemeOptions,
   ImageSchemeOptions,
   SchemeFormatOptions,
-} from "./src/material";
-export { SWATCH_NAMES, MATERIAL_ROLES, MaterialYouColors } from "./src/data";
-export { render as renderTemplate } from "./src/template";
-export type { TemplateData } from "./src/template";
+} from "@/attachment/color.js";
+export { SWATCH_NAMES } from "@/extract.js";
+export { MATERIAL_ROLES } from "@/attachment/color.js";
+export { render as renderTemplate } from "@/template.js";
+export type { TemplateData } from "@/template.js";
 export type {
   RGB,
   RGBA,
@@ -62,4 +63,4 @@ export type {
   SwatchSchemeMap,
   ColorExtractionType,
   ImageSchemeResultMap,
-} from "./src/types";
+} from "@/types.js";

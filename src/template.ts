@@ -1,68 +1,83 @@
 export type TemplateData = Record<string, unknown>;
 
-type Context = {
-  data: TemplateData;
+interface Context {
+  value: unknown;
   parent?: Context;
-};
+  variables: Record<string, unknown>;
+}
 
-function getValue(context: Context, path: string): unknown {
-  // ../user.name
-  if (path.startsWith("../")) {
-    return context.parent ? getValue(context.parent, path.slice(3)) : undefined;
+function lookup(context: Context, path: string): unknown {
+  const normalized = path.trim();
+  if (normalized === "this") return context.value;
+  if (normalized.startsWith("../")) {
+    return context.parent ? lookup(context.parent, normalized.slice(3)) : undefined;
   }
 
-  // current context
-  return path.split(".").reduce<unknown>((value, key) => {
-    if (value === null || typeof value !== "object") {
-      return undefined;
-    }
-
-    return (value as Record<string, unknown>)[key];
-  }, context.data);
+  const parts: string[] = normalized.match(/\([^)]*\)|[^.]+/g) ?? [];
+  let value: unknown;
+  const first = parts.shift()!;
+  const firstKey = first.startsWith("(")
+    ? String(context.variables[first.slice(1, -1)] ?? first.slice(1, -1))
+    : first;
+  if (firstKey in context.variables) {
+    value = context.variables[firstKey];
+  } else {
+    value = context.value;
+    parts.unshift(firstKey);
+  }
+  for (const part of parts) {
+    if (value === null || typeof value !== "object") return undefined;
+    const key = part.startsWith("(")
+      ? String(context.variables[part.slice(1, -1)] ?? part.slice(1, -1))
+      : part;
+    value = (value as Record<string, unknown>)[key];
+  }
+  return value;
 }
 
 function renderTemplate(template: string, context: Context): string {
-  // loops
+  template = template.replace(
+    /{{#each\s+([\w.]+)(?:\s+as\s+(\w+))?}}([\s\S]*?){{\/each}}/g,
+    (_, path: string, variable: string | undefined, body: string) => {
+      const value = lookup(context, path);
+      const entries = Array.isArray(value)
+        ? value.map((item, index) => [String(index), item] as const)
+        : value !== null && typeof value === "object"
+          ? Object.entries(value)
+          : [];
+      return entries.map(([key, item], index) => renderTemplate(body, {
+        value: item,
+        parent: context,
+        variables: {
+          ...context.variables,
+          [variable ?? "this"]: Array.isArray(value) ? item : key,
+          this: item,
+          index,
+        },
+      })).join("");
+    },
+  );
   template = template.replace(
     /{{#([\w.]+)}}([\s\S]*?){{\/\1}}/g,
-    (_, key: string, content: string) => {
-      const value = getValue(context, key);
-
-      if (!Array.isArray(value)) {
-        return "";
+    (_, path: string, body: string) => {
+      const value = lookup(context, path);
+      if (Array.isArray(value)) {
+        return value.map((item) => renderTemplate(body, {
+          value: item,
+          parent: context,
+          variables: context.variables,
+        })).join("");
       }
-
-      return value
-        .map((item) => {
-          if (item === null || typeof item !== "object") {
-            return "";
-          }
-
-          return renderTemplate(content, {
-            data: item as TemplateData,
-            parent: context,
-          });
-        })
-        .join("");
+      return value ? renderTemplate(body, context) : "";
     },
   );
-
-  // values
-  return template.replace(
-    /{{\s*([\w.]+|(?:\.\.\/)+[\w.]+)\s*}}/g,
-    (_, key: string) => {
-      const value = getValue(context, key);
-
-      return value == null ? "" : String(value);
-    },
-  );
-}
-
-/** Render placeholders and array sections as plain text, without HTML escaping. */
-export function render<T extends TemplateData>(template: string, data: T): string {
-  return renderTemplate(template, {
-    data,
+  return template.replace(/{{\s*([^{}]+?)\s*}}/g, (_, path: string) => {
+    const value = lookup(context, path);
+    return value == null ? "" : String(value);
   });
 }
 
-
+/** Render values and `#each`/section loops without HTML escaping. */
+export function render<T extends TemplateData>(template: string, data: T): string {
+  return renderTemplate(template, { value: data, variables: data });
+}

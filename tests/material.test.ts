@@ -1,14 +1,15 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import { Hct } from "@material/material-color-utilities";
 import { convertColorFromArgb, argbToRgb } from "../src/convert";
-import { MATERIAL_ROLES, SWATCH_NAMES } from "../src/data";
+import { MATERIAL_ROLES } from "../src/attachment/color";
+import { SWATCH_NAMES } from "../src/extract";
 import {
   SCHEMES,
   schemeFromDominantColor,
   schemeFromPaletteColors,
   schemeFromSourceColor,
   schemeFromSwatchColors,
-} from "../src/material";
+} from "../src/attachment/color";
 import type { SchemeName } from "../src/material";
 import type { ColorFormat, SwatchColorMap } from "../src/types";
 
@@ -70,23 +71,19 @@ describe("Material source schemes", () => {
       (format) => {
         const result = schemeFromSourceColor(seed, { scheme, format });
         const packed = schemeFromSourceColor(seed, { scheme, format: "argb" });
-        expect(Object.keys(result).sort()).toEqual(["color", "sourceColor"]);
-        expect(Object.keys(result.color).sort()).toEqual(["dark", "light"]);
+        expect(Object.keys(result).sort()).toEqual(["colors", "sourceColor"]);
         expect(result.sourceColor).toEqual(convertColorFromArgb(seed, format));
         for (const mode of ["light", "dark"] as const) {
-          expect(Object.keys(result.color[mode]).sort()).toEqual(
-            [...MATERIAL_ROLES].sort(),
-          );
           for (const role of MATERIAL_ROLES) {
-            expect(result.color[mode][role]).toEqual(
-              convertColorFromArgb(packed.color[mode][role], format),
+            expect(result.colors[role][mode]).toEqual(
+              convertColorFromArgb(packed.colors[role][mode], format),
             );
-            expect(Number.isInteger(packed.color[mode][role])).toBe(true);
-            expect(packed.color[mode][role] >>> 24).toBe(255);
+            expect(Number.isInteger(packed.colors[role][mode])).toBe(true);
+            expect(packed.colors[role][mode] >>> 24).toBe(255);
           }
         }
-        expect(packed.color.light.background).not.toBe(
-          packed.color.dark.background,
+        expect(packed.colors.background.light).not.toBe(
+          packed.colors.background.dark,
         );
       },
     );
@@ -124,7 +121,7 @@ describe("Material source schemes", () => {
             material.colors.allColors.map((color) => [color.name, color]),
           );
           for (const role of MATERIAL_ROLES) {
-            expect(result.color[mode][role]).toBe(
+            expect(result.colors[role][mode]).toBe(
               colors.get(role)!.getArgb(material),
             );
           }
@@ -143,14 +140,14 @@ describe("Material source schemes", () => {
       contrastLevel: 1,
     });
     for (const mode of ["light", "dark"] as const) {
-      expect(increased.color[mode]).not.toEqual(reduced.color[mode]);
+      expect(increased.colors).not.toEqual(reduced.colors);
       expect(
         contrast(
-          increased.color[mode].primary,
-          increased.color[mode].on_primary,
+          increased.colors.primary[mode],
+          increased.colors.on_primary[mode],
         ),
       ).toBeGreaterThan(
-        contrast(reduced.color[mode].primary, reduced.color[mode].on_primary),
+        contrast(reduced.colors.primary[mode], reduced.colors.on_primary[mode]),
       );
     }
   });
@@ -176,8 +173,8 @@ describe("Material source schemes", () => {
       schemeFromSourceColor(0xffffffff),
     );
     expect(schemeFromSourceColor(0x806750a4).sourceColor).toBe("#6750a480");
-    expect(schemeFromSourceColor(0x806750a4).color).toEqual(
-      schemeFromSourceColor(seed).color,
+    expect(schemeFromSourceColor(0x806750a4).colors).toEqual(
+      schemeFromSourceColor(seed).colors,
     );
   });
 });
@@ -214,7 +211,7 @@ describe("dominant, palette and swatch schemes", () => {
       for (const [index, color] of result.entries()) {
         expect(Array.isArray(color)).toBe(false);
         expect(Object.keys(color).sort()).toEqual([
-          "color",
+          "colors",
           "id",
           "name",
           "sourceColor",

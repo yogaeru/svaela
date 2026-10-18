@@ -1,15 +1,33 @@
 {
-  "name": "colyx",
-  "module": "index.ts",
+  "name": "svaela",
+  "version": "0.1.0",
+  "description": "Typed color conversion, image extraction, Material 3 schemes, and templates.",
+  "license": "MIT",
+  "files": ["dist", "README.md", "LICENSE"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "typecheck": "bun check"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "bun test",
+    "example:extract": "bun run examples/extractImage.ts",
+    "example:convert": "bun run examples/convertColor.ts",
+    "example:scheme": "bun run examples/materialScheme.ts",
+    "example:template": "bun run examples/renderTheme.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^7"
   },
   "peerDependencies": {
-    "typescript": "^7",
     "sharp": "^0.35.5"
   },
   "dependencies": {
