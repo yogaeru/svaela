@@ -1,47 +1,102 @@
+/**
+ * Shared color representations and role-oriented Material scheme results.
+ * Numeric channels must be finite; conversion functions validate their ranges.
+ * Type declarations alone do not validate values at runtime.
+ * @module
+ */
+
+/** Image input accepted by Color Thief; supported sources depend on the runtime. */
 export type { ImageSource } from "colorthief";
 
+/** sRGB channels in 0..255; fractional channels are allowed. No alpha channel. */
 export interface RGB {
+  /** Red, 0..255. */
   r: number;
+  /** Green, 0..255. */
   g: number;
+  /** Blue, 0..255. */
   b: number;
 }
 
+/** sRGB with explicit alpha; packing as ARGB rounds channels to bytes. */
 export interface RGBA extends RGB {
+  /** Alpha, 0 (transparent) to 1 (opaque). */
   a: number;
 }
 
+/** HSL in degrees and percentages, not unit saturation/lightness. */
 export interface HSL {
+  /** Finite hue in degrees; conversion wraps it into [0, 360). */
   h: number;
+  /** Saturation, 0..100 percent. */
   s: number;
+  /** Lightness, 0..100 percent. */
   l: number;
 }
 
+/** HSL with explicit alpha. */
 export interface HSLA extends HSL {
+  /** Alpha, 0 (transparent) to 1 (opaque). */
   a: number;
 }
 
-export interface OKLCH {
-  l: number;
-  c: number;
+/** HSV in degrees and percentages, not unit saturation/value. */
+export interface HSV {
+  /** Finite hue in degrees; conversion wraps it into [0, 360). */
   h: number;
+  /** Saturation, 0..100 percent. */
+  s: number;
+  /** Value (brightness), 0..100 percent. */
+  v: number;
+}
+
+/** HSV with explicit alpha. */
+export interface HSVA extends HSV {
+  /** Alpha, 0 (transparent) to 1 (opaque). */
   a: number;
 }
 
+/** OKLCH with unit lightness and required alpha; conversion clips to sRGB gamut. */
+export interface OKLCH {
+  /** Lightness, 0..1 (not a percentage). */
+  l: number;
+  /** Finite, nonnegative chroma; not a percentage and has no fixed upper bound. */
+  c: number;
+  /** Finite hue in degrees; conversion wraps it into [0, 360). */
+  h: number;
+  /** Alpha, 0 (transparent) to 1 (opaque). */
+  a: number;
+}
+
+/** Format-to-value lookup used to infer conversion and scheme return types. */
 export interface ColorFormatMap {
+  /** Input: #rgb, #rgba, #rrggbb, #rrggbbaa; output: lowercase #rrggbb[aa]. */
   hex: string;
+  /** Packed 0xAARRGGBB; signed/unsigned 32-bit input, unsigned output. */
   argb: number;
+  /** sRGB without alpha; converting from ARGB discards alpha. */
   rgb: RGB;
+  /** sRGB with unit alpha. */
   rgba: RGBA;
+  /** HSL without alpha; converting from ARGB discards alpha. */
   hsl: HSL;
+  /** HSL with unit alpha. */
   hsla: HSLA;
+  /** HSV without alpha; converting from ARGB discards alpha. */
+  hsv: HSV;
+  /** HSV with unit alpha. */
+  hsva: HSVA;
+  /** OKLCH with unit alpha. */
   oklch: OKLCH;
 }
 
+/** Supported color representation names; scheme helpers default to `"hex"`. */
 export type ColorFormat = keyof ColorFormatMap;
-export type ColorResult<F extends ColorFormat> = ColorFormatMap[F];
-export type ColorValue = ColorFormatMap[ColorFormat];
+/** Value associated with a format; defaults to the union of all supported shapes. */
+export type ColorValue<Format extends ColorFormat = ColorFormat> = ColorFormatMap[Format];
 
-export type SwatchName =
+/** Named image swatch categories, in the canonical order of `SWATCH_ROLES`. */
+export type SwatchRole =
   | "Vibrant"
   | "DarkVibrant"
   | "LightVibrant"
@@ -49,6 +104,7 @@ export type SwatchName =
   | "DarkMuted"
   | "LightMuted";
 
+/** Material semantic color roles, using the upstream snake_case names. */
 export type MaterialRole =
   | "background"
   | "on_background"
@@ -100,38 +156,86 @@ export type MaterialRole =
   | "error_container"
   | "on_error_container";
 
-export type ThemeMode = "light" | "dark";
-export type SchemeColors<F extends ColorFormat> = Record<
+/** The two modes generated together for every Material role. */
+export type SchemeMode = "light" | "dark";
+/**
+ * Complete role-first map: `colors.primary.light`, not `colors.light.primary`.
+ * Every role has both modes in Format; generated role colors are opaque.
+ */
+export type MaterialSchemeColors<Format extends ColorFormat> = Record<
   MaterialRole,
-  Record<ThemeMode, ColorResult<F>>
+  Record<SchemeMode, ColorValue<Format>>
 >;
 
-export interface MaterialColorResponse<F extends ColorFormat = "hex"> {
-  sourceColor: ColorResult<F>;
-  colors: SchemeColors<F>;
+/** A source and its complete light/dark role map; Format defaults to hex strings. */
+export interface MaterialScheme<Format extends ColorFormat = "hex"> {
+  /** Original seed in Format; alpha is retained only in alpha-capable formats. */
+  sourceColor: ColorValue<Format>;
+  /** Opaque generated role colors; seed alpha does not control role opacity. */
+  colors: MaterialSchemeColors<Format>;
 }
 
-export interface MaterialSchemeResult<F extends ColorFormat = "hex">
-  extends MaterialColorResponse<F> {
+/** A scheme with extraction metadata; array helpers preserve their source order. */
+export interface MaterialSchemeResult<Format extends ColorFormat = "hex">
+  extends MaterialScheme<Format> {
+  /** `dominant`, a 1-based palette index string, or a swatch category name. */
   id: string;
+  /** `Dominant`, `Palette-N` (1-based), or the swatch category name. */
   name: string;
 }
 
-export type SchemeResponse<F extends ColorFormat = "hex"> = SchemeColors<F>;
-export type MaterialColorResponseMap = {
-  [F in ColorFormat]: MaterialColorResponse<F>;
+/** Type-level lookup of the source-and-colors scheme for each output format. */
+export type MaterialSchemeFormatMap = {
+  [Format in ColorFormat]: MaterialScheme<Format>;
 };
-export type SwatchSchemeMap<F extends ColorFormat = "hex"> = Partial<
-  Record<SwatchName, MaterialColorResponse<F>>
+/** Optional swatch-keyed schemes; unlike the array returned by swatch helpers. */
+export type SwatchMaterialSchemeMap<Format extends ColorFormat = "hex"> = Partial<
+  Record<SwatchRole, MaterialScheme<Format>>
 >;
 
-export type SwatchColorMap<F extends ColorFormat> = Record<
-  SwatchName,
-  ColorResult<F> | undefined
+/** All six swatch keys are present; unavailable colors have value `undefined`. */
+export type SwatchColorMap<Format extends ColorFormat> = Record<
+  SwatchRole,
+  ColorValue<Format> | undefined
 >;
 
-export type ColorExtractionType = "dominant" | "palette" | "swatch";
-export type ImageSchemeResultMap<F extends ColorFormat = "hex"> = Record<
-  ColorExtractionType,
-  MaterialSchemeResult<F>[]
+/** Image seed selection strategy; image scheme generation defaults to dominant. */
+export type ColorExtractionMode = "dominant" | "palette" | "swatch";
+/**
+ * Type-level map of extraction strategies to result arrays (possibly empty).
+ * `createMaterialSchemesFromImage` returns one strategy's array, not this whole map.
+ */
+export type MaterialSchemeResultsByExtractionMode<Format extends ColorFormat = "hex"> = Record<
+  ColorExtractionMode,
+  MaterialSchemeResult<Format>[]
 >;
+
+/** @deprecated Use {@link ColorValue}. */
+export type ColorResult<Format extends ColorFormat> = ColorValue<Format>;
+
+/** @deprecated Use {@link SwatchRole}. */
+export type SwatchVariant = SwatchRole;
+
+/** @deprecated Use {@link SchemeMode}. */
+export type ThemeMode = SchemeMode;
+
+/** @deprecated Use {@link MaterialSchemeColors}. */
+export type SchemeColors<Format extends ColorFormat> = MaterialSchemeColors<Format>;
+
+/** @deprecated Use {@link MaterialScheme}. */
+export type MaterialColorResponse<Format extends ColorFormat = "hex"> = MaterialScheme<Format>;
+
+/** @deprecated Use {@link MaterialSchemeColors}; this legacy alias defaults to hex. */
+export type SchemeResponse<Format extends ColorFormat = "hex"> = MaterialSchemeColors<Format>;
+
+/** @deprecated Use {@link MaterialSchemeFormatMap}. */
+export type MaterialColorResponseMap = MaterialSchemeFormatMap;
+
+/** @deprecated Use {@link SwatchMaterialSchemeMap}. */
+export type SwatchSchemeMap<Format extends ColorFormat = "hex"> = SwatchMaterialSchemeMap<Format>;
+
+/** @deprecated Use {@link ColorExtractionMode}. */
+export type ColorExtractionType = ColorExtractionMode;
+
+/** @deprecated Use {@link MaterialSchemeResultsByExtractionMode}. */
+export type ImageSchemeResultMap<Format extends ColorFormat = "hex"> = MaterialSchemeResultsByExtractionMode<Format>;
