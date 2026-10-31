@@ -1,7 +1,7 @@
 {
   "name": "svaela",
   "version": "0.1.0",
-  "description": "Typed color conversion, image extraction, Material 3 schemes, and templates.",
+  "description": "Typed color conversion, image extraction, Material 3 themes, and templates.",
   "license": "MIT",
   "files": ["dist", "README.md", "LICENSE"],
   "exports": {
