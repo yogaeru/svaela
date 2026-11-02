@@ -41,7 +41,7 @@ export {
   formatColor,
   ARGB_TO_COLOR_CONVERTERS,
   ARGB_CONVERTERS,
-} from "@/convert";
+} from "./src/convert";
 export {
   convertExtractedColor,
   getSwatchColor,
@@ -55,7 +55,7 @@ export {
   getPaletteColorFromImage,
   getSwatchColorFromImage,
   SWATCH_NAMES,
-} from "@/extract";
+} from "./src/extract";
 export {
   MATERIAL_ROLES,
   MATERIAL_SCHEMES,
@@ -70,7 +70,7 @@ export {
   schemeFromSwatchColors,
   schemeFromPaletteColors,
   schemeFromImageToColor,
-} from "@/material";
+} from "./src/material";
 export type {
   MaterialSchemeVariant,
   MaterialSchemeOptions,
@@ -80,9 +80,9 @@ export type {
   SchemeOptions,
   ImageSchemeOptions,
   SchemeFormatOptions,
-} from "@/material";
-export { renderTemplate } from "@/template";
-export type { TemplateData } from "@/template";
+} from "./src/material";
+export { renderTemplate } from "./src/template";
+export type { TemplateData } from "./src/template";
 export type {
   RGB,
   RGBA,
@@ -115,4 +115,5 @@ export type {
   SwatchSchemeMap,
   ColorExtractionType,
   ImageSchemeResultMap,
-} from "@/types";
+} from "./src/types";
+  
