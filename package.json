@@ -33,7 +33,7 @@
   },
   "peerDependenciesMeta": {
     "sharp": {
-      "optional:" true
+      "optional": true
     }
   },
   "dependencies": {
