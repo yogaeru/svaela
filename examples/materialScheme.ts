@@ -1,25 +1,32 @@
+/**
+ * Material scheme tour: `bun run example:scheme` from the project root.
+ * Demonstrates role-first light/dark results, variants, formats, contrast, and
+ * metadata-bearing arrays. The final section decodes images/1.png and requires
+ * sharp; the sourceArgb-based sections do not load images.
+ * @module
+ */
 import { fileURLToPath } from "bun";
 
 import {
   hexToArgb,
   MATERIAL_ROLES,
-  SCHEMES,
-  schemeFromDominantColor,
-  schemeFromImageToColor,
-  schemeFromPaletteColors,
-  schemeFromSourceColor,
-  schemeFromSwatchColors,
+  MATERIAL_SCHEMES,
+  createMaterialSchemesFromDominantColor,
+  createMaterialSchemesFromImage,
+  createMaterialSchemesFromPalette,
+  createMaterialScheme,
+  createMaterialSchemesFromSwatches,
 } from "../index"
-import type { ImageSchemeOptions, SwatchColorMap } from "../index";
+import type { MaterialSchemeImageOptions, SwatchColorMap } from "../index";
 
-const seed = hexToArgb("#6750a4");
-const theme = schemeFromSourceColor(seed);
+const sourceArgb = hexToArgb("#6750a4");
+const materialScheme = createMaterialScheme(sourceArgb);
 
-console.log("Source color:", theme.sourceColor);
-console.log("Primary light:", theme.colors.primary.light);
-console.log("Primary dark:", theme.colors.primary.dark);
+console.log("Source color:", materialScheme.sourceColor);
+console.log("Primary light:", materialScheme.colors.primary.light);
+console.log("Primary dark:", materialScheme.colors.primary.dark);
 console.log("Role count:", MATERIAL_ROLES.length);
-console.log("Schemes:", Object.keys(SCHEMES));
+console.log("Schemes:", Object.keys(MATERIAL_SCHEMES));
 
 for (const format of [
   "hex",
@@ -30,45 +37,45 @@ for (const format of [
   "hsla",
   "oklch",
 ] as const) {
-  const result = schemeFromSourceColor(seed, {
+  const materialScheme = createMaterialScheme(sourceArgb, {
     format,
     scheme: "expressive",
     contrastLevel: 0.5,
   });
-  console.log(`${String(format)} primary:`, result.colors.primary);
+  console.log(`${String(format)} primary:`, materialScheme.colors.primary);
 }
 
-for (const scheme of Object.keys(SCHEMES) as Array<keyof typeof SCHEMES>) {
-  const result = schemeFromSourceColor(seed, { scheme, format: "hex" });
-  console.log(`${String(scheme)} primary:`, result.colors.primary.light);
+for (const scheme of Object.keys(MATERIAL_SCHEMES) as Array<keyof typeof MATERIAL_SCHEMES>) {
+  const materialScheme = createMaterialScheme(sourceArgb, { scheme, format: "hex" });
+  console.log(`${String(scheme)} primary:`, materialScheme.colors.primary.light);
 }
 
-console.log("Dominant:", schemeFromDominantColor(seed));
-console.log("Palette:", schemeFromPaletteColors([seed, 0xff3366cc, seed]));
+console.log("Dominant:", createMaterialSchemesFromDominantColor(sourceArgb));
+console.log("Palette:", createMaterialSchemesFromPalette([sourceArgb, 0xff3366cc, sourceArgb]));
 
-const swatches: SwatchColorMap<"argb"> = {
-  Vibrant: seed,
+const swatchArgb: SwatchColorMap<"argb"> = {
+  Vibrant: sourceArgb,
   DarkVibrant: 0xff3366cc,
   LightVibrant: undefined,
   Muted: 0xff777777,
   DarkMuted: undefined,
   LightMuted: 0xffbbbbbb,
 };
-console.log("Swatches:", schemeFromSwatchColors(swatches, { format: "hex" }));
+console.log("Swatches:", createMaterialSchemesFromSwatches(swatchArgb, { format: "hex" }));
 
-const imageOptions: ImageSchemeOptions = {
+const imageOptions: MaterialSchemeImageOptions = {
   format: "hex",
   scheme: "vibrant",
   contrastLevel: -0.25,
-  colorType: "palette",
+  extractionMode: "palette",
   paletteSize: 5,
 };
 console.log("Image options:", imageOptions);
 
-const image = fileURLToPath(new URL("../images/1.png", import.meta.url));
-for (const colorType of ["dominant", "palette", "swatch"] as const) {
+const imageSource = fileURLToPath(new URL("../images/1.png", import.meta.url));
+for (const extractionMode of ["dominant", "palette", "swatch"] as const) {
   console.log(
-    `Image ${String(colorType)}:`,
-    await schemeFromImageToColor(image, { ...imageOptions, colorType }),
+    `Image ${String(extractionMode)}:`,
+    await createMaterialSchemesFromImage(imageSource, { ...imageOptions, extractionMode }),
   );
 }
