@@ -34,7 +34,14 @@
  * ```
  * @module
  */
-import { getColor, getPalette, getSwatches } from "colorthief";
+import {
+  getColor,
+  getPalette,
+  getSwatches,
+  getColorSync,
+  getSwatchesSync,
+  getPaletteSync,
+} from "colorthief";
 
 import { convertColorFromArgb, rgbToArgb } from "./convert";
 /** The six semantic swatch keys, in the order used to build swatch results. */
@@ -126,6 +133,22 @@ export async function extractDominantColor<Format extends ColorFormat>(
 }
 
 /**
+ * Synchronously extracts the dominant color from an image, returning it in the specified format.
+ * @param imageSource - The image source to extract from.
+ * @param format - The desired output format.
+ * @returns The extracted color in the specified format, or `undefined` if no color could be extracted.
+ */
+export function extractDominantColorSync<Format extends ColorFormat>(
+  imageSource: ImageSource,
+  format: Format,
+): ColorValue<Format> | undefined {
+  const colorThiefColor = getColorSync(imageSource);
+  return colorThiefColor
+    ? convertExtractedColor(colorThiefColor, format)
+    : undefined;
+}
+
+/**
  * Extract colors classified into six semantic swatch roles, not a ranked palette.
  * Uses Color Thief's default swatch extraction settings.
  * @param imageSource - A platform-supported `ImageSource`: a Node.js file path or
@@ -152,6 +175,22 @@ export async function extractSwatchColors<Format extends ColorFormat>(
   format: Format,
 ): Promise<SwatchColorMap<Format>> {
   const colorThiefSwatches = await getSwatches(imageSource);
+  return Object.fromEntries(
+    SWATCH_ROLES.map((role) => [
+      role,
+      getSwatchColor(colorThiefSwatches, format, role),
+    ]),
+  ) as SwatchColorMap<Format>;
+}
+
+/**
+ * Synchronously extract swatch colors from an image.
+ */
+export function extractSwatchColorsSync<Format extends ColorFormat>(
+  imageSource: ImageSource,
+  format: Format,
+): SwatchColorMap<Format> {
+  const colorThiefSwatches = getSwatchesSync(imageSource);
   return Object.fromEntries(
     SWATCH_ROLES.map((role) => [
       role,
@@ -193,6 +232,25 @@ export async function extractPaletteColors<Format extends ColorFormat>(
     throw new RangeError("Palette count must be an integer between 2 and 20");
   }
   const colorThiefPalette = await getPalette(imageSource, {
+    colorCount: paletteSize,
+  });
+  return colorThiefPalette?.map((color) =>
+    convertExtractedColor(color, format),
+  );
+}
+
+/**
+ * Synchronously extract swatch colors from an image.
+ */
+export function extractPaletteColorsSync<Format extends ColorFormat>(
+  imageSource: ImageSource,
+  format: Format,
+  paletteSize = 3,
+): ColorValue<Format>[] | undefined {
+  if (!Number.isInteger(paletteSize) || paletteSize < 2 || paletteSize > 20) {
+    throw new RangeError("Palette count must be an integer between 2 and 20");
+  }
+  const colorThiefPalette = getPaletteSync(imageSource, {
     colorCount: paletteSize,
   });
   return colorThiefPalette?.map((color) =>

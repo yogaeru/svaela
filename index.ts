@@ -48,6 +48,9 @@ export {
   extractDominantColor,
   extractPaletteColors,
   extractSwatchColors,
+  extractDominantColorSync,
+  extractPaletteColorsSync,
+  extractSwatchColorsSync,
   SWATCH_ROLES,
   getColorFormat,
   getSwatchTypeColor,
@@ -116,4 +119,3 @@ export type {
   ColorExtractionType,
   ImageSchemeResultMap,
 } from "./src/types";
-  
