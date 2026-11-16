@@ -23,11 +23,14 @@ import type { ImageSource } from "colorthief";
 
 import { convertColorFromArgb } from "./convert";
 import {
+  extractDominantColorSync,
+  extractPaletteColorsSync,
+  extractSwatchColorsSync,
   extractDominantColor,
   extractPaletteColors,
   extractSwatchColors,
   SWATCH_ROLES,
-} from "./extract.js";
+} from "./extract";
 import type {
   ColorExtractionMode,
   ColorFormat,
@@ -36,7 +39,7 @@ import type {
   MaterialSchemeResult,
   MaterialSchemeColors,
   SwatchColorMap,
-} from "./types.js";
+} from "./types";
 
 /** Complete role list and insertion order used in each generated color map. */
 export const MATERIAL_ROLES = [
@@ -415,6 +418,47 @@ export async function createMaterialSchemesFromImage(
     case "swatch":
       return createMaterialSchemesFromSwatches(
         await extractSwatchColors(imageSource, "argb"),
+        options,
+      );
+  }
+}
+
+export function createMaterialSchemesFromImageSync(
+  imageSource: ImageSource,
+  options?: MaterialSchemeImageOptions & { format?: "hex" },
+): MaterialSchemeResult<"hex">[];
+/** Extract image schemes in format Format; see the default overload for ordering, empty results, and errors. */
+export function createMaterialSchemesFromImageSync<Format extends ColorFormat>(
+  imageSource: ImageSource,
+  options: MaterialSchemeImageOptions & MaterialSchemeFormatOptions<Format>,
+): MaterialSchemeResult<Format>[];
+/** Extract image schemes with runtime-selected options; resolves to an array, possibly empty. */
+export function createMaterialSchemesFromImageSync(
+  imageSource: ImageSource,
+  options: MaterialSchemeImageOptions,
+): MaterialSchemeResult<ColorFormat>[];
+export function createMaterialSchemesFromImageSync(
+  imageSource: ImageSource,
+  options: MaterialSchemeImageOptions = {},
+): MaterialSchemeResult<ColorFormat>[] {
+  switch (options.extractionMode ?? "dominant") {
+    case "dominant": {
+      const dominantArgb = extractDominantColorSync(imageSource, "argb");
+      return dominantArgb === undefined
+        ? []
+        : createMaterialSchemesFromDominantColor(dominantArgb, options);
+    }
+    case "palette": {
+      const paletteArgb = extractPaletteColorsSync(
+        imageSource,
+        "argb",
+        options.paletteSize,
+      );
+      return createMaterialSchemesFromPalette(paletteArgb ?? [], options);
+    }
+    case "swatch":
+      return createMaterialSchemesFromSwatches(
+        extractSwatchColorsSync(imageSource, "argb"),
         options,
       );
   }
