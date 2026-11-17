@@ -19,7 +19,7 @@ import {
   SchemeVibrant,
 } from "@material/material-color-utilities";
 import type { DynamicScheme } from "@material/material-color-utilities";
-import type { ImageSource } from "colorthief";
+import type { ImageSource, BrowserSource } from "colorthief";
 
 import { convertColorFromArgb } from "./convert";
 import {
@@ -424,21 +424,21 @@ export async function createMaterialSchemesFromImage(
 }
 
 export function createMaterialSchemesFromImageSync(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   options?: MaterialSchemeImageOptions & { format?: "hex" },
 ): MaterialSchemeResult<"hex">[];
 /** Extract image schemes in format Format; see the default overload for ordering, empty results, and errors. */
 export function createMaterialSchemesFromImageSync<Format extends ColorFormat>(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   options: MaterialSchemeImageOptions & MaterialSchemeFormatOptions<Format>,
 ): MaterialSchemeResult<Format>[];
 /** Extract image schemes with runtime-selected options; resolves to an array, possibly empty. */
 export function createMaterialSchemesFromImageSync(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   options: MaterialSchemeImageOptions,
 ): MaterialSchemeResult<ColorFormat>[];
 export function createMaterialSchemesFromImageSync(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   options: MaterialSchemeImageOptions = {},
 ): MaterialSchemeResult<ColorFormat>[] {
   switch (options.extractionMode ?? "dominant") {

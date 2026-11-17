@@ -67,6 +67,7 @@ export {
   createMaterialSchemesFromPalette,
   createMaterialSchemesFromSwatches,
   createMaterialSchemesFromImage,
+  createMaterialSchemesFromImageSync,
   SCHEMES,
   schemeFromSourceColor,
   schemeFromDominantColor,

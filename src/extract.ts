@@ -44,6 +44,15 @@ import {
 } from "colorthief";
 
 import { convertColorFromArgb, rgbToArgb } from "./convert";
+import type {
+  Color,
+  ImageSource,
+  BrowserSource,
+  SwatchMap,
+  SwatchRole as ColorThiefSwatchRole,
+} from "colorthief";
+import type { ColorFormat, ColorValue, SwatchColorMap } from "./types";
+
 /** The six semantic swatch keys, in the order used to build swatch results. */
 export const SWATCH_ROLES = [
   "Vibrant",
@@ -53,14 +62,6 @@ export const SWATCH_ROLES = [
   "DarkMuted",
   "LightMuted",
 ] as const;
-
-import type {
-  Color,
-  ImageSource,
-  SwatchMap,
-  SwatchRole as ColorThiefSwatchRole,
-} from "colorthief";
-import type { ColorFormat, ColorValue, SwatchColorMap } from "./types";
 
 /**
  * Convert a Color Thief color's RGB channels to a svaela format.
@@ -139,7 +140,7 @@ export async function extractDominantColor<Format extends ColorFormat>(
  * @returns The extracted color in the specified format, or `undefined` if no color could be extracted.
  */
 export function extractDominantColorSync<Format extends ColorFormat>(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   format: Format,
 ): ColorValue<Format> | undefined {
   const colorThiefColor = getColorSync(imageSource);
@@ -187,7 +188,7 @@ export async function extractSwatchColors<Format extends ColorFormat>(
  * Synchronously extract swatch colors from an image.
  */
 export function extractSwatchColorsSync<Format extends ColorFormat>(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   format: Format,
 ): SwatchColorMap<Format> {
   const colorThiefSwatches = getSwatchesSync(imageSource);
@@ -243,7 +244,7 @@ export async function extractPaletteColors<Format extends ColorFormat>(
  * Synchronously extract swatch colors from an image.
  */
 export function extractPaletteColorsSync<Format extends ColorFormat>(
-  imageSource: ImageSource,
+  imageSource: BrowserSource,
   format: Format,
   paletteSize = 3,
 ): ColorValue<Format>[] | undefined {
