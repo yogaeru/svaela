@@ -23,10 +23,9 @@ Material 3 color schemes, and plain-text theme templates.
 
 ## Installation and runtimes
 
-```sh
-bun add svaela
-# or
-npm install svaela
+```
+#Add this at your package.json as dependencies
+"svaela": "github:yogaeru/svaela#main"
 ```
 
 For Node.js file/Buffer image decoding, install the `sharp` peer dependency too:
@@ -40,10 +39,10 @@ npm install sharp
 Conversion, seed-based schemes, and templates do not decode images. Image source
 support follows Color Thief and depends on the runtime:
 
-| Runtime | Image sources |
-| --- | --- |
+| Runtime | Image sources                                                                           |
+| ------- | --------------------------------------------------------------------------------------- |
 | Browser | Ready image/video elements, canvases, `ImageData`, `ImageBitmap`, and `OffscreenCanvas` |
-| Node.js | File path strings and Buffers, using the default `sharp` loader |
+| Node.js | File path strings and Buffers, using the default `sharp` loader                         |
 
 Browser images must be canvas-readable; cross-origin images require appropriate
 CORS permissions. A string passed to the default Node loader is a file path, not
@@ -67,20 +66,20 @@ const css = formatColor(rgba, "rgba"); // "rgba(103 80 164 / 1)"
 
 const theme = createMaterialScheme(seed);
 console.log(theme.colors.primary.light); // light-mode hex string
-console.log(theme.colors.primary.dark);  // dark-mode hex string
+console.log(theme.colors.primary.dark); // dark-mode hex string
 ```
 
 ## Color formats and units
 
-| Format key | Value | Units and alpha |
-| --- | --- | --- |
-| `hex` | `string` | Input: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`; generated output: lowercase `#rrggbb` or `#rrggbbaa` |
-| `argb` | `number` | Packed `0xAARRGGBB`; signed 32-bit inputs accepted, unsigned output |
-| `rgb` | `{ r, g, b }` | sRGB channels 0–255; no alpha |
-| `rgba` | `{ r, g, b, a }` | RGB plus alpha 0–1 |
-| `hsl` | `{ h, s, l }` | Hue in degrees, saturation/lightness 0–100 percent; no alpha |
-| `hsla` | `{ h, s, l, a }` | HSL plus alpha 0–1 |
-| `oklch` | `{ l, c, h, a }` | Lightness 0–1, nonnegative raw chroma, degree hue, required alpha 0–1 |
+| Format key | Value            | Units and alpha                                                                                      |
+| ---------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `hex`      | `string`         | Input: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`; generated output: lowercase `#rrggbb` or `#rrggbbaa` |
+| `argb`     | `number`         | Packed `0xAARRGGBB`; signed 32-bit inputs accepted, unsigned output                                  |
+| `rgb`      | `{ r, g, b }`    | sRGB channels 0–255; no alpha                                                                        |
+| `rgba`     | `{ r, g, b, a }` | RGB plus alpha 0–1                                                                                   |
+| `hsl`      | `{ h, s, l }`    | Hue in degrees, saturation/lightness 0–100 percent; no alpha                                         |
+| `hsla`     | `{ h, s, l, a }` | HSL plus alpha 0–1                                                                                   |
+| `oklch`    | `{ l, c, h, a }` | Lightness 0–1, nonnegative raw chroma, degree hue, required alpha 0–1                                |
 
 Object channels must be finite. RGB channels can be fractional. Conversion wraps
 finite hue into `[0, 360)`; achromatic conversions use hue zero. OKLCH chroma is
@@ -107,11 +106,11 @@ const oklch = convertColorFromArgb(packed, "oklch");
 const restored = convertColorToArgb(oklch, "oklch");
 ```
 
-| Function | Purpose |
-| --- | --- |
+| Function                             | Purpose                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
 | `convertColorFromArgb(argb, format)` | Convert packed ARGB to the selected representation; format determines the return type |
-| `convertColorToArgb(color, format)` | Parse/convert a value of the specified format to an unsigned ARGB integer |
-| `formatColor(color, format)` | Serialize a value in its existing format; does not convert color spaces |
+| `convertColorToArgb(color, format)`  | Parse/convert a value of the specified format to an unsigned ARGB integer             |
+| `formatColor(color, format)`         | Serialize a value in its existing format; does not convert color spaces               |
 
 Format arguments are required and case-sensitive. There is no format detection.
 Literal format keys infer precise types, such as `RGBA` for `"rgba"`.
@@ -168,11 +167,11 @@ const palette = await extractPaletteColors(source, "rgb", 5);
 const swatches = await extractSwatchColors(source, "rgba");
 ```
 
-| Function | Result when no color is available |
-| --- | --- |
-| `extractDominantColor(source, format)` | `undefined` |
-| `extractPaletteColors(imageSource, format, paletteSize = 3)` | `undefined` |
-| `extractSwatchColors(source, format)` | All six swatch keys with unavailable values set to `undefined` |
+| Function                                                     | Result when no color is available                              |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `extractDominantColor(source, format)`                       | `undefined`                                                    |
+| `extractPaletteColors(imageSource, format, paletteSize = 3)` | `undefined`                                                    |
+| `extractSwatchColors(source, format)`                        | All six swatch keys with unavailable values set to `undefined` |
 
 `paletteSize` must be an integer from 2 to 20; it is validated before image loading.
 The resulting palette can contain fewer colors than requested. Swatch keys follow
@@ -204,9 +203,9 @@ const theme = createMaterialScheme(hexToArgb("#6750a4"), {
 });
 
 // MaterialScheme<"oklch">
-theme.sourceColor;          // OKLCH object
+theme.sourceColor; // OKLCH object
 theme.colors.primary.light; // OKLCH object for light mode
-theme.colors.primary.dark;  // OKLCH object for dark mode
+theme.colors.primary.dark; // OKLCH object for dark mode
 ```
 
 Results are **role-first**, not mode-first:
@@ -218,13 +217,13 @@ Results are **role-first**, not mode-first:
 Every `MATERIAL_ROLES` key is present, in that order. Source alpha is retained
 when the selected format supports it; generated role colors are always opaque.
 
-| Option | Default | Constraints |
-| --- | --- | --- |
-| `format` | `"hex"` | Any supported color format |
-| `scheme` | `"tonalSpot"` | A `MaterialSchemeVariant` key from `MATERIAL_SCHEMES` |
-| `contrastLevel` | `0` | Finite number from -1 (reduced) to 1 (increased) |
-| `extractionMode` (images) | `"dominant"` | `"dominant"`, `"palette"`, or `"swatch"` |
-| `paletteSize` (images) | `3` | Integer 2–20; used/validated only in palette mode |
+| Option                    | Default       | Constraints                                           |
+| ------------------------- | ------------- | ----------------------------------------------------- |
+| `format`                  | `"hex"`       | Any supported color format                            |
+| `scheme`                  | `"tonalSpot"` | A `MaterialSchemeVariant` key from `MATERIAL_SCHEMES` |
+| `contrastLevel`           | `0`           | Finite number from -1 (reduced) to 1 (increased)      |
+| `extractionMode` (images) | `"dominant"`  | `"dominant"`, `"palette"`, or `"swatch"`              |
+| `paletteSize` (images)    | `3`           | Integer 2–20; used/validated only in palette mode     |
 
 Available variants: `content`, `vibrant`, `rainbow`, `neutral`, `fidelity`,
 `tonalSpot`, `fruitSalad`, `expressive`, and `monochrome`.
@@ -253,12 +252,12 @@ for (const result of results) {
 
 Every array entry has `{ id, name, sourceColor, colors }`.
 
-| Function | Ordering and metadata |
-| --- | --- |
-| `createMaterialSchemesFromDominantColor(argb, options?)` | One result: `id: "dominant"`, `name: "Dominant"` |
-| `createMaterialSchemesFromPalette(argbColors, options?)` | Input order, including duplicates; IDs `"1"`, `"2"`, … and names `"Palette-1"`, … |
+| Function                                                    | Ordering and metadata                                                              |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `createMaterialSchemesFromDominantColor(argb, options?)`    | One result: `id: "dominant"`, `name: "Dominant"`                                   |
+| `createMaterialSchemesFromPalette(argbColors, options?)`    | Input order, including duplicates; IDs `"1"`, `"2"`, … and names `"Palette-1"`, …  |
 | `createMaterialSchemesFromSwatches(argbSwatches, options?)` | `SWATCH_ROLES` order; swatch key is both ID and name; unavailable swatches skipped |
-| `createMaterialSchemesFromImage(source, options?)` | Extracts the selected strategy, then applies the corresponding helper above |
+| `createMaterialSchemesFromImage(source, options?)`          | Extracts the selected strategy, then applies the corresponding helper above        |
 
 The first three helpers accept a `MaterialSchemeVariant` string instead of an options
 object for hex output at standard contrast. They consume packed ARGB seeds, not
@@ -284,15 +283,15 @@ const css = renderTemplate(
 );
 ```
 
-| Syntax | Meaning |
-| --- | --- |
-| `{{user.name}}` | Dotted property lookup |
-| `{{../name}}` | Lookup in the parent loop context; repeat `../` to ascend further |
-| `{{colors.(role).(mode)}}` | Dynamic keys from variables; missing/null variables fall back to the segment's literal name |
-| `{{#each items as item}}...{{/each}}` | Array loop; `item` is the element, `this` is the element, `index` is zero-based |
-| `{{#each colors as role}}...{{/each}}` | Object loop; `role` is the key, `this` is the value, `index` is zero-based |
-| `{{#items}}...{{/items}}` | Array shorthand loop; each element becomes the current context |
-| `{{#enabled}}...{{/enabled}}` | For non-arrays, render once in the unchanged context if truthy |
+| Syntax                                 | Meaning                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `{{user.name}}`                        | Dotted property lookup                                                                      |
+| `{{../name}}`                          | Lookup in the parent loop context; repeat `../` to ascend further                           |
+| `{{colors.(role).(mode)}}`             | Dynamic keys from variables; missing/null variables fall back to the segment's literal name |
+| `{{#each items as item}}...{{/each}}`  | Array loop; `item` is the element, `this` is the element, `index` is zero-based             |
+| `{{#each colors as role}}...{{/each}}` | Object loop; `role` is the key, `this` is the value, `index` is zero-based                  |
+| `{{#items}}...{{/items}}`              | Array shorthand loop; each element becomes the current context                              |
+| `{{#enabled}}...{{/enabled}}`          | For non-arrays, render once in the unchanged context if truthy                              |
 
 Without an explicit `as` alias, `#each` supplies `this` and `index`. Root variables
 remain available inside loops; aliases/root variables take precedence over
@@ -324,34 +323,34 @@ Names describe both the operation and its result:
 Previous exports remain available as deprecated aliases; function aliases retain
 identity and overload inference. New code and examples use the canonical names:
 
-| Previous name | Canonical name |
-| --- | --- |
-| `getDominantColorFromImage` | `extractDominantColor` |
-| `getPaletteColorFromImage` | `extractPaletteColors` |
-| `getSwatchColorFromImage` | `extractSwatchColors` |
-| `getColorFormat` | `convertExtractedColor` |
-| `getSwatchTypeColor` | `getSwatchColor` |
-| `schemeFromSourceColor` | `createMaterialScheme` |
-| `schemeFromDominantColor` | `createMaterialSchemesFromDominantColor` |
-| `schemeFromPaletteColors` | `createMaterialSchemesFromPalette` |
-| `schemeFromSwatchColors` | `createMaterialSchemesFromSwatches` |
-| `schemeFromImageToColor` | `createMaterialSchemesFromImage` |
-| `ARGB_CONVERTERS` | `ARGB_TO_COLOR_CONVERTERS` |
-| `SWATCH_NAMES` | `SWATCH_ROLES` |
-| `SCHEMES` | `MATERIAL_SCHEMES` |
-| `ColorResult<Format>` | `ColorValue<Format>` |
-| `SwatchVariant` | `SwatchRole` |
-| `ThemeMode` | `SchemeMode` |
-| `SchemeColors<Format>` / `SchemeResponse<Format>` | `MaterialSchemeColors<Format>` |
-| `MaterialColorResponse<Format>` | `MaterialScheme<Format>` |
-| `MaterialColorResponseMap` | `MaterialSchemeFormatMap` |
-| `SwatchSchemeMap<Format>` | `SwatchMaterialSchemeMap<Format>` |
-| `ColorExtractionType` | `ColorExtractionMode` |
-| `ImageSchemeResultMap<Format>` | `MaterialSchemeResultsByExtractionMode<Format>` |
-| `SchemeVariant` | `MaterialSchemeVariant` |
-| `SchemeOptions` | `MaterialSchemeOptions` |
-| `SchemeFormatOptions<Format>` | `MaterialSchemeFormatOptions<Format>` |
-| `ImageSchemeOptions` | `MaterialSchemeImageOptions` |
+| Previous name                                     | Canonical name                                  |
+| ------------------------------------------------- | ----------------------------------------------- |
+| `getDominantColorFromImage`                       | `extractDominantColor`                          |
+| `getPaletteColorFromImage`                        | `extractPaletteColors`                          |
+| `getSwatchColorFromImage`                         | `extractSwatchColors`                           |
+| `getColorFormat`                                  | `convertExtractedColor`                         |
+| `getSwatchTypeColor`                              | `getSwatchColor`                                |
+| `schemeFromSourceColor`                           | `createMaterialScheme`                          |
+| `schemeFromDominantColor`                         | `createMaterialSchemesFromDominantColor`        |
+| `schemeFromPaletteColors`                         | `createMaterialSchemesFromPalette`              |
+| `schemeFromSwatchColors`                          | `createMaterialSchemesFromSwatches`             |
+| `schemeFromImageToColor`                          | `createMaterialSchemesFromImage`                |
+| `ARGB_CONVERTERS`                                 | `ARGB_TO_COLOR_CONVERTERS`                      |
+| `SWATCH_NAMES`                                    | `SWATCH_ROLES`                                  |
+| `SCHEMES`                                         | `MATERIAL_SCHEMES`                              |
+| `ColorResult<Format>`                             | `ColorValue<Format>`                            |
+| `SwatchVariant`                                   | `SwatchRole`                                    |
+| `ThemeMode`                                       | `SchemeMode`                                    |
+| `SchemeColors<Format>` / `SchemeResponse<Format>` | `MaterialSchemeColors<Format>`                  |
+| `MaterialColorResponse<Format>`                   | `MaterialScheme<Format>`                        |
+| `MaterialColorResponseMap`                        | `MaterialSchemeFormatMap`                       |
+| `SwatchSchemeMap<Format>`                         | `SwatchMaterialSchemeMap<Format>`               |
+| `ColorExtractionType`                             | `ColorExtractionMode`                           |
+| `ImageSchemeResultMap<Format>`                    | `MaterialSchemeResultsByExtractionMode<Format>` |
+| `SchemeVariant`                                   | `MaterialSchemeVariant`                         |
+| `SchemeOptions`                                   | `MaterialSchemeOptions`                         |
+| `SchemeFormatOptions<Format>`                     | `MaterialSchemeFormatOptions<Format>`           |
+| `ImageSchemeOptions`                              | `MaterialSchemeImageOptions`                    |
 
 The source template module now also calls its public function `renderTemplate`;
 its previous `render` export remains an alias. The package export was already
@@ -369,14 +368,14 @@ Each module has file-level documentation and public API JSDoc for editor hover
 help, including parameter ranges, defaults, return values, errors, and examples.
 Only the package entry point is declared as a published import path.
 
-| File | Responsibility |
-| --- | --- |
-| [`index.ts`](./index.ts) | Public functions, constants, and type exports |
-| [`src/types.ts`](./src/types.ts) | Channel units, format lookup, swatch and role-first scheme types |
-| [`src/convert.ts`](./src/convert.ts) | Conversion, validation, packing, and formatting |
-| [`src/extract.ts`](./src/extract.ts) | Color Thief image adapters and swatch names |
+| File                                   | Responsibility                                                     |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| [`index.ts`](./index.ts)               | Public functions, constants, and type exports                      |
+| [`src/types.ts`](./src/types.ts)       | Channel units, format lookup, swatch and role-first scheme types   |
+| [`src/convert.ts`](./src/convert.ts)   | Conversion, validation, packing, and formatting                    |
+| [`src/extract.ts`](./src/extract.ts)   | Color Thief image adapters and swatch names                        |
 | [`src/material.ts`](./src/material.ts) | Material roles, variants, generation options, and scheme factories |
-| [`src/template.ts`](./src/template.ts) | Plain-text placeholders, sections, and loops |
+| [`src/template.ts`](./src/template.ts) | Plain-text placeholders, sections, and loops                       |
 
 ## Development and examples
 
