@@ -1,0 +1,93 @@
+:root,
+.light,
+.rust,
+.coal,
+.navy,
+.ayu {
+  /* Latar Belakang & Teks Utama */
+  --bg: #200f0d;                         /* background / surface */
+  --fg: #fedad6;                         /* on_background / on_surface */
+
+  /* Sidebar & Navigasi */
+  --sidebar-bg: #291715;                 /* surface_container_low */
+  --sidebar-fg: #e8bcb7;                 /* on_surface_variant */
+  --sidebar-non-existant: #af8783;       /* outline */
+  --sidebar-active: #ffb4ab;             /* primary */
+  --sidebar-spacer: #5e3f3b;             /* outline_variant */
+
+  /* Tautan & Ikon UI */
+  --links: #ffb4ab;                      /* primary / primary_fixed_dim */
+  --icons: #e8bcb7;                      /* on_surface_variant */
+  --icons-hover: #ffdad6;                /* primary_fixed */
+  --scrollbar: #5e3f3b;                  /* outline_variant */
+
+  /* Inline Code */
+  --inline-code-color: #ffb871;          /* tertiary (kontras amber hangat) */
+
+  /* Menu Popup Tema */
+  --theme-popup-bg: #3a2522;             /* surface_container_high */
+  --theme-popup-border: #5e3f3b;         /* outline_variant */
+  --theme-hover: #452f2d;                /* surface_container_highest */
+
+  /* Blockquote */
+  --quote-bg: #2e1a18;                   /* surface_container */
+  --quote-border: #df0019;               /* primary_container */
+
+  /* Tabel */
+  --table-border-color: #5e3f3b;         /* outline_variant */
+  --table-header-bg: #3a2522;            /* surface_container_high */
+  --table-alternate-bg: #291715;         /* surface_container_low */
+
+  /* Kotak Pencarian (Search Bar) */
+  --searchbar-border-color: #5e3f3b;     /* outline_variant */
+  --searchbar-bg: #2e1a18;               /* surface_container */
+  --searchbar-fg: #fedad6;               /* on_surface */
+  --searchbar-shadow-color: #1a0908;     /* surface_container_lowest */
+
+  /* Hasil Pencarian (Search Results) */
+  --searchresults-header-fg: #ffb4ab;    /* primary */
+  --searchresults-border-color: #5e3f3b; /* outline_variant */
+  --searchresults-li-bg: #3a2522;        /* surface_container_high */
+  --search-mark-bg: #8e1314;             /* secondary_container */
+}
+
+/* Override tambahan untuk elemen yang tidak menggunakan variabel CSS bawaan mdBook */
+::selection {
+  background-color: #8e1314;             /* secondary_container */
+  color: #ffdad6;                        /* secondary_fixed */
+}
+
+/* Blok Kode (<pre> & highlight.js) */
+pre,
+code.hljs {
+  background-color: #1a0908 !important;  /* surface_container_lowest */
+  color: #fedad6;                        /* on_surface */
+  border: 1px solid #5e3f3b;             /* outline_variant */
+}
+
+/* Inline code background halus agar lebih jelas */
+:not(pre) > code {
+  background-color: #2e1a18;             /* surface_container */
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* Penanda teks hasil pencarian */
+mark {
+  background-color: #8e1314;             /* secondary_container */
+  color: #ffdad6;                        /* secondary_fixed */
+}
+
+/* State hover pada link, sidebar, dan tombol navigasi */
+.content a:hover {
+  color: #ffdad6;                        /* primary_fixed */
+}
+
+.sidebar .sidebar-scrollbox li a:hover {
+  color: #ffdad6;                        /* primary_fixed */
+}
+
+.nav-chapters:hover {
+  background-color: #2e1a18;             /* surface_container */
+  color: #ffb4ab;                        /* primary */
+}
